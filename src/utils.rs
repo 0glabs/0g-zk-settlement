@@ -6,7 +6,8 @@ pub fn u8_array_to_string_array<const N: usize>(arr: &[u8; N]) -> String {
     format!("[{}]", strings.join(", "))
 }
 
-pub fn u8_to_u64_le(input: &[u8; 32]) -> [u64; 4] {
+pub fn u8_to_u64_le(input: &[u8]) -> [u64; 4] {
+    assert!(input.len() == 32);
     let mut result = [0u64; 4];
     for i in 0..4 {
         result[i] = u64::from_le_bytes(input[i*8..(i+1)*8].try_into().unwrap());
@@ -14,7 +15,8 @@ pub fn u8_to_u64_le(input: &[u8; 32]) -> [u64; 4] {
     result
 }
 
-pub fn u64_to_u8_le(input: &[u64; 4]) -> [u8; 32] {
+pub fn u64_to_u8_le(input: &[u64]) -> [u8; 32] {
+    assert!(input.len() == 4);
     let mut privkey = [0u8; 32];
 
     for i in 0..4 {
@@ -25,7 +27,8 @@ pub fn u64_to_u8_le(input: &[u64; 4]) -> [u8; 32] {
     privkey
 }
 
-pub fn u64_to_u8_be(input: &[u64; 4]) -> [u8; 32] {
+pub fn u64_to_u8_be(input: &[u64]) -> [u8; 32] {
+    assert!(input.len() == 4);
     let mut privkey = [0u8; 32];
 
     for i in 0..4 {
@@ -36,41 +39,21 @@ pub fn u64_to_u8_be(input: &[u64; 4]) -> [u8; 32] {
     privkey
 }
 
-pub fn u64_array_to_u8_arrays_le(input: &[u64; 8]) -> ([u8; 32], [u8; 32]) {
-    let mut pubkey_x = [0u8; 32];
-    let mut pubkey_y = [0u8; 32];
-
-    for i in 0..4 {
-        let bytes_x = input[i].to_le_bytes();
-        let bytes_y = input[i+4].to_le_bytes();
-        pubkey_x[i*8..(i+1)*8].copy_from_slice(&bytes_x);
-        pubkey_y[i*8..(i+1)*8].copy_from_slice(&bytes_y);
-    }
+pub fn bytefy_pubkey_le(pubkey: &[u64]) -> ([u8; 32], [u8; 32]) {
+    assert!(pubkey.len() == 8);
+    let pubkey_x = u64_to_u8_le(&pubkey[..4]);
+    let pubkey_y = u64_to_u8_le(&pubkey[4..]);
 
     (pubkey_x, pubkey_y)
 }
 
-pub fn u64_array_to_u8_arrays_be(input: &[u64; 8]) -> ([u8; 32], [u8; 32]) {
-    let mut pubkey_x = [0u8; 32];
-    let mut pubkey_y = [0u8; 32];
-
-    for i in 0..4 {
-        let bytes_x = input[i].to_be_bytes();
-        let bytes_y = input[i+4].to_be_bytes();
-        pubkey_x[i*8..(i+1)*8].copy_from_slice(&bytes_x);
-        pubkey_y[i*8..(i+1)*8].copy_from_slice(&bytes_y);
-    }
+pub fn bytefy_pubkey_be(pubkey: &[u64]) -> ([u8; 32], [u8; 32]) {
+    assert!(pubkey.len() == 8);
+    let pubkey_x = u64_to_u8_be(&pubkey[..4]);
+    let pubkey_y = u64_to_u8_be(&pubkey[4..]);
 
     (pubkey_x, pubkey_y)
 }
-
-pub fn u8_array_to_decimal_strings(arr: &[u8; 32]) -> String {
-    arr.iter()
-        .map(|&b| format!("\"{}\"", b))
-        .collect::<Vec<String>>()
-        .join(", ")
-}
-
 pub fn bigint_to_u8_array_le(s: &str) -> Vec<u8> {
     // 将字符串解析为 BigUint
     let num = BigUint::from_str_radix(s, 10).unwrap();
