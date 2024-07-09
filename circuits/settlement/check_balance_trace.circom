@@ -7,7 +7,6 @@ include "../keccak/bytes_to_num.circom";
 include "./lookup.circom";
 
 template BalanceTraceCheck(l) {
-    assert(l>1);
     var i;
     var j;
     var commitmentBytesWidth = 32;
@@ -58,23 +57,13 @@ template BalanceTraceCheck(l) {
     }
     lookup.targetKey <== packTargetKeys.out;
     
-    signal input inputCount[l][countBytesWidth];
-    signal input outputCount[l][countBytesWidth];
-    component packInputCount[l];
-    component packOutputCount[l];
-    for (i=0; i<l; i++) {
-        packInputCount[i] = Bytes2Num(countBytesWidth);
-        packOutputCount[i] = Bytes2Num(countBytesWidth);
-        packInputCount[i].in <== inputCount[i];
-        packOutputCount[i].in <== outputCount[i];
-    }
+    signal input inputCount[l];
+    signal input outputCount[l];
     signal costAccumulator[l];
-    costAccumulator[0] <== packInputCount[0].out * lookup.targetValue;
-    for (i=1; i<l-1; i++) {
-        costAccumulator[i] <== costAccumulator[i-1] + (packInputCount[i].out + packOutputCount[i].out) * lookup.targetValue;
+    costAccumulator[0] <== (inputCount[0] + outputCount[0]) * lookup.targetValue;
+    for (i=1; i<l; i++) {
+        costAccumulator[i] <== costAccumulator[i-1] + (inputCount[i] + outputCount[i]) * lookup.targetValue;
     }
-    costAccumulator[l-1] <== costAccumulator[l-2] + packOutputCount[l-1].out * lookup.targetValue;
-    // log("costAccumulator ", costAccumulator[l-1]);
 
     signal input initBalance[balanceBytesWidth];
     component packBalance = Bytes2Num(balanceBytesWidth);

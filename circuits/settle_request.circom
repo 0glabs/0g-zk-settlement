@@ -7,6 +7,7 @@ include "./settlement/commit_account.circom";
 include "./settlement/lookup.circom";
 include "./settlement/check_balance_trace.circom";
 include "./settlement/check_nonce_trace.circom";
+include "./settlement/verify_trace_signature.circom";
 
 // l: trace length
 template SettleTrace(l) {
@@ -22,20 +23,30 @@ template SettleTrace(l) {
     var nonceBytesWidth = 4; // unit32:[u8;4]
     var priceTableLen = 3;
     var numBits = 8; // pubkey bits per chunk
-    var k = 32; // pubkey chunks
+    // var k = 32; // pubkey chunks
     
-
     // request content
     // every settlment just process one account, so the pubkey should be same
-    signal input reqPubkey[2][k];
+    signal input reqPubkey[2][32];
     signal input reqNonce[l][nonceBytesWidth];
     signal input reqServiceName[serviceNameBytesWidth]; // string:uint256
     signal input reqInputCount[l][countBytesWidth];
     signal input reqOutputCount[l][countBytesWidth];
     // signal input createdAt[l];
-    // signal input r[l][k];
-    // signal input s[l][k];
-    // signal input msghash[l][k];
+    signal input r[l][32];
+    signal input s[l][32];
+
+
+    // verify signature
+    component sigVerifier = TraceSignatureVerify(l);
+    sigVerifier.pubkeyBytes <== reqPubkey;
+    sigVerifier.serviceNameBytes <== reqServiceName;
+    sigVerifier.inputCountBytes <== reqInputCount;
+    sigVerifier.outputCountBytes <== reqOutputCount;
+    sigVerifier.nonceBytes <== reqNonce;
+    sigVerifier.rBytes <== r;
+    sigVerifier.sBytes <== s;
+
 
     // account content
     // every settlment just process one account
@@ -70,8 +81,8 @@ template SettleTrace(l) {
     checkBalanceTrace.tableKeys <== priceTableKeys;
     checkBalanceTrace.tableValues <== priceTableValues;
     checkBalanceTrace.serviceName <== reqServiceName;
-    checkBalanceTrace.inputCount <== reqInputCount;
-    checkBalanceTrace.outputCount <== reqOutputCount;
+    checkBalanceTrace.inputCount <== sigVerifier.inputCount;
+    checkBalanceTrace.outputCount <== sigVerifier.outputCount;
     checkBalanceTrace.initBalance <== accBalance;
     signal output servicePriceTableCommitment[commitmentBytesWidth];
     servicePriceTableCommitment <== checkBalanceTrace.priceTableCommitment;
@@ -86,4 +97,4 @@ template SettleTrace(l) {
     new_commitment <== newAccountCommit.commitment;
 }
 
-component main = SettleTrace(3);
+component main = SettleTrace(1);

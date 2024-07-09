@@ -8,8 +8,8 @@ template PubkeyToAddress() {
     signal input pubkeyBytes[2][32];
     component hasher = Keccak256(32*2);
     for (i=0; i<32; i++) {
-      hasher.hashInput[i] <== pubkeyBytes[0][31-i];
-      hasher.hashInput[32+i] <== pubkeyBytes[1][31-i];
+      hasher.hashInput[i] <== pubkeyBytes[0][i];
+      hasher.hashInput[32+i] <== pubkeyBytes[1][i];
     }
 
     signal output address[addressBytesWidth];
