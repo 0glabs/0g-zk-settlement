@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PHASE1=./pot20_final.ptau
+PHASE1=./pot22_final.ptau
 BUILD_DIR=./build
 CIRCUIT_NAME=settle_request
 
