@@ -1,5 +1,6 @@
 use num_bigint::BigUint;
 use num_traits::Num;
+use tiny_keccak::{Keccak, Hasher};
 
 pub fn u8_array_to_string_array<const N: usize>(arr: &[u8; N]) -> String {
     let strings: Vec<String> = arr.iter().map(|&byte| format!("\"{}\"", byte)).collect();
@@ -89,4 +90,12 @@ pub fn string_array_to_u8_array(arr: &[&str; 32]) -> Result<[u8; 32], std::num::
         result[i] = s.parse()?;
     }
     Ok(result)
+}
+
+pub fn keccak(input: &[u8]) -> [u8; 32] {
+    let mut hasher = Keccak::v256();
+    hasher.update(input);
+    let mut result = [0u8; 32];
+    hasher.finalize(&mut result);
+    result
 }

@@ -6,7 +6,8 @@
   "scripts": {
     "start": "ts-node ecdsa.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "./build_circuit.sh"
+    "build": "./build_circuit.sh",
+    "check_memory": "ts-node check_memory.ts"
   },
   "author": "",
   "license": "ISC",

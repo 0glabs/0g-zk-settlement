@@ -4,7 +4,7 @@ mod utils;
 mod ecdsa;
 mod request;
 
-use account::{keccak, serialize_account};
+use account::serialize_account;
 use eth_keys::{generate_ethereum_keys_from_private_key, EthereumKeys};
 use ecdsa::*;
 use num_bigint::BigUint;

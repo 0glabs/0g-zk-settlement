@@ -1,5 +1,3 @@
-use tiny_keccak::{Keccak, Hasher};
-
 pub fn serialize_account(
     user_address: &[u8; 20],
     provider_address: &[u8; 20],
@@ -14,12 +12,4 @@ pub fn serialize_account(
     account_bytes.extend_from_slice(balance);
 
     account_bytes
-}
-
-pub fn keccak(input: &[u8]) -> [u8; 32] {
-    let mut hasher = Keccak::v256();
-    hasher.update(input);
-    let mut result = [0u8; 32];
-    hasher.finalize(&mut result);
-    result
 }
