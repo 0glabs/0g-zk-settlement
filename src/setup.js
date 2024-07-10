@@ -72,10 +72,8 @@ async function runTrustedSetup() {
         console.log('****EXPORTING VERIFICATION KEY****');
         await measureTime(async () => {
             const vKey = await snarkjs.zKey.exportVerificationKey(`${config.buildDir}/${config.circuitName}.zkey`);
-            await fs.writeFile(`${config.buildDir}/${config.circuitName}_vkey.json`, JSON.stringify(vKey, null, 2));
+            await fs.writeFile(`${config.buildDir}/vkey.json`, JSON.stringify(vKey, null, 2));
         });
-
-        console.log('Trusted setup completed successfully');
     } catch (error) {
         console.error('Error during setup:', error);
         throw error;
