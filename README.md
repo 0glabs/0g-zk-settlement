@@ -3,12 +3,12 @@
 > The service provider can decide at any point to send the request traces with user’s signature to the smart contract for settlement. Once settlement is done, the corresponding portion of the pre-charged fee can be sent to service provider’s account. 
 
 Users and service providers conduct off-chain service transactions, and service providers can consume the _request traces_ generated from each service transaction to settle service fees on-chain and update user balances.
-![image.png](https://cdn.nlark.com/yuque/0/2024/png/2564997/1718956636147-880b94df-617b-4d52-a7c0-71c673efeabe.png#averageHue=%23525252&clientId=ucddcc35b-b90c-4&from=paste&height=444&id=ue9d1795c&originHeight=888&originWidth=2092&originalType=binary&ratio=2&rotation=0&showTitle=false&size=393910&status=done&style=none&taskId=u17e76410-bbec-49e8-9614-259f8afcfd1&title=&width=1046)
+![image.png](./doc/‎0G%20zkSettlement.‎001.png)
 # Why zk？
 As shown in the figure above, on-chain nodes need to execute all complete state transition processes sequentially, which is often costly. With the introduction of zk:
 
 1. Multiple state transition processing can be batched into one init to final state transition.
-2. On-chain nodes only need to execute the proof verification process, which is often relatively cheap.![image.png](https://cdn.nlark.com/yuque/0/2024/png/2564997/1718956704772-77370747-abaa-4735-91be-78af10ec852a.png#averageHue=%23262626&clientId=ucddcc35b-b90c-4&from=paste&height=414&id=u3d53df7b&originHeight=828&originWidth=2358&originalType=binary&ratio=2&rotation=0&showTitle=false&size=349851&status=done&style=none&taskId=ue9a046b3-0068-4751-848d-2def62a1373&title=&width=1179)
+2. On-chain nodes only need to execute the proof verification process, which is often relatively cheap.![image.png](./doc/‎0G%20zkSettlement.‎002.png)
 # Design
 ## Single request
 The request contains the following metadata such as:
@@ -39,7 +39,7 @@ _From the server perspective, he/she want to settle a request:_
 5. _In the new state, the balance reduction fee for user_address is correct;_
 6. _In the new state, the balance increase fee for server_address is correct;_
 
-![image.png](https://cdn.nlark.com/yuque/0/2024/png/2564997/1718959180030-258bb672-c9e3-4a7a-823a-927b972a5c6d.png#averageHue=%23000000&clientId=ucddcc35b-b90c-4&from=paste&height=499&id=u60c00b39&originHeight=998&originWidth=1704&originalType=binary&ratio=2&rotation=0&showTitle=false&size=251054&status=done&style=none&taskId=u3132f559-1f09-47c9-b0a7-5122346b9b1&title=&width=852)
+![image.png](./doc/‎0G%20zkSettlement.‎003.png)
 The above 6 assertions from the server perspective include the following issues that need to be solved in addition to _the content check_.
 
 1. How to obtain user_address.balance in the circuit through user_address?
@@ -49,7 +49,7 @@ The above 6 assertions from the server perspective include the following issues 
 
 For issues 1 and 2, I believe a commit scheme should be added to organize the account information, form a commitment, and store it in the contract~~, such as a simple Merkle tree or a more efficient Verkle tree. Here is to use a Merkle tree~~. (In the new scheme, only need to commit the account, and there is no need to organize all the accounts into merkel tree.)
 As shown in step 2, the server~~ downloads the aux data for calculating the path from the chain and then~~ proves that the content of the request can correctly calculate the same target commitment.
-![image.png](https://cdn.nlark.com/yuque/0/2024/png/2564997/1718960098550-6dac0123-66fc-43d9-b89d-4f6fe3ff5ae4.png#averageHue=%23050505&clientId=ucddcc35b-b90c-4&from=paste&height=747&id=uacce6dcd&originHeight=1494&originWidth=2362&originalType=binary&ratio=2&rotation=0&showTitle=false&size=615347&status=done&style=none&taskId=u2230ae1f-7b9c-49af-a546-6358fc81a0b&title=&width=1181)
+![image.png](./doc/‎0G%20zkSettlement.‎004.png)
 For issues 3 and 4, as shown in step 3, mappings can be implemented using lookup. Lookup can be implemented using the plookup algorithm or by interpolating the mappings into polynomials. The former is more suitable for sparse user_address, while the latter is more suitable for service_type.
 Once these issues are resolved, as shown in step 4, the validity of the signature and as shown in step 5, the correctness of the state transition (_that is, the previous content check and the new target commitment computation_) can be further proven. 
 After the proof is verified, as shown in step 6, the account state and server balance recorded on the chain can be changed.
@@ -73,6 +73,7 @@ yarn setup
 ```
 ## Access with web
 Open your web browser (such as Chrome, Firefox, etc.). Enter in the address bar: http://[server IP address]:3000 (for example: http://127.0.0.1:3000). You should see the zkSettlment prover agent web interface.
+![image.png](./doc/interface.png)
 
 The web interface provides the following functionalities:
 ### Get Verification Key
