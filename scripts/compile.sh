@@ -1,8 +1,8 @@
 #!/bin/bash
 
 CIRCUIT_PATH=./circuits
-BUILD_DIR=./build
-CIRCUIT_NAME=settle
+BUILD_DIR=./build_ecdsa
+CIRCUIT_NAME=settle_ecdsa
 PHASE1="$CIRCUIT_PATH"/pot22_final.ptau
 
 if [ -f "$PHASE1" ]; then

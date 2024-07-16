@@ -1,11 +1,11 @@
 const path = require('path');
 
-const circuitName = 'settle';
+const circuitName = 'settle_ecdsa';
 
 const config = {
     circuitName,
     circuitsDir: path.join(__dirname, '../circuits'),
-    buildDir: path.join(__dirname, '../build'),
+    buildDir: path.join(__dirname, '../build_ecdsa'),
     ptauPath: path.join(__dirname, '../circuits/pot22_final.ptau'),
     port: 3000
 };

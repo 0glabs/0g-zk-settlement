@@ -1,6 +1,6 @@
 pragma circom 2.0.2; 
 
-include "../keccak/bytes_to_num.circom";
+include "../utils/bytes_to_num.circom";
 include "./ecdsa.circom";
 
 template ECDSAVerify() {

@@ -1,0 +1,88 @@
+
+pragma circom 2.0.0;
+
+include "../../node_modules/circomlib/circuits/gates.circom";
+include "../../node_modules/circomlib/circuits/binsum.circom";
+include "../../node_modules/circomlib/circuits/comparators.circom";
+include "../hasher/pedersen_bytes.circom";
+include "../utils/bytes_to_num.circom";
+include "../eddsa/eddsa_verify.circom";
+
+template TraceSignatureVerify(l) {
+    var i;
+    var j;
+    var serviceNameBytesWidth = 32; // string:[u8;32]
+    var countBytesWidth = 4; // uint32:[u8;4]
+    var nonceBytesWidth = 4; // unit32:[u8;4]
+
+    // eddsa
+    signal input pubkeyBytes[32];
+    signal input serviceNameBytes[serviceNameBytesWidth]; // string:uint256
+    signal input inputCountBytes[l][countBytesWidth];
+    signal input outputCountBytes[l][countBytesWidth];
+    signal input nonceBytes[l][nonceBytesWidth];
+    signal input rBytes[l][32];
+    signal input sBytes[l][32];
+
+    // eddsa 
+    component verifier[l];
+    for (i=0; i<l; i++) {
+        verifier[i] = EdDSAVerify(44);
+        verifier[i].R8 <== rBytes[i];
+        verifier[i].S <== sBytes[i];
+        for (j=0; j<serviceNameBytesWidth; j++) {
+            verifier[i].msg[j] <== serviceNameBytes[j];
+        }
+        for (j=0; j<countBytesWidth; j++) {
+            verifier[i].msg[serviceNameBytesWidth + j] <== inputCountBytes[i][j];
+        }
+        for (j=0; j<countBytesWidth; j++) {
+            verifier[i].msg[serviceNameBytesWidth + countBytesWidth + j] <== outputCountBytes[i][j];
+        }
+        for (j=0; j<nonceBytesWidth; j++) {
+            verifier[i].msg[serviceNameBytesWidth + countBytesWidth*2 + j] <== nonceBytes[i][j];
+        }
+        verifier[i].A <== pubkeyBytes;
+    }
+
+    component packInputCount[l];
+    component packOutputCount[l];
+    component inputIsZero[l];
+    component outputIsZero[l];
+    component countAllZero[l];
+    component sigValidOrCountAllZero[l];
+    component sumFlag = BinSum(1, l);
+    for (i=0; i<l; i++) {
+        packInputCount[i] = Bytes2Num(countBytesWidth);
+        packOutputCount[i] = Bytes2Num(countBytesWidth);
+        packInputCount[i].in <== inputCountBytes[i];
+        packOutputCount[i].in <== outputCountBytes[i];
+
+        inputIsZero[i] = IsZero();
+        outputIsZero[i] = IsZero();
+        inputIsZero[i].in <== packInputCount[i].out;
+        outputIsZero[i].in <== packOutputCount[i].out;
+
+        countAllZero[i] = AND();
+        countAllZero[i].a <== inputIsZero[i].out;
+        countAllZero[i].b <== outputIsZero[i].out;
+        
+        sigValidOrCountAllZero[i] = OR();
+        sigValidOrCountAllZero[i].a <== verifier[i].result;
+        sigValidOrCountAllZero[i].b <== countAllZero[i].out;
+        
+        sumFlag.in[i][0] <== sigValidOrCountAllZero[i].out;
+    }
+
+    var sumFlagOutBits = nbits((2**1 -1)*l);
+    component packFlag = Bits2Num(sumFlagOutBits);
+    packFlag.in <== sumFlag.out;
+    packFlag.out === l;
+
+    signal output inputCount[l];
+    signal output outputCount[l];
+    for (i=0; i<l; i++) {
+        inputCount[i] <== packInputCount[i].out;
+        outputCount[i] <== packOutputCount[i].out;
+    }
+}

@@ -4,8 +4,8 @@ pragma circom 2.0.0;
 include "../../node_modules/circomlib/circuits/gates.circom";
 include "../../node_modules/circomlib/circuits/binsum.circom";
 include "../../node_modules/circomlib/circuits/comparators.circom";
-include "../keccak/keccak_bytes.circom";
-include "../keccak/bytes_to_num.circom";
+include "../hasher/keccak_bytes.circom";
+include "../utils/bytes_to_num.circom";
 include "../ecdsa/ecdsa_verify.circom";
 
 template TraceSignatureVerify(l) {
@@ -15,7 +15,9 @@ template TraceSignatureVerify(l) {
     var countBytesWidth = 4; // uint32:[u8;4]
     var nonceBytesWidth = 4; // unit32:[u8;4]
 
+    // ecdsa
     signal input pubkeyBytes[2][32];
+    
     signal input serviceNameBytes[serviceNameBytesWidth]; // string:uint256
     signal input inputCountBytes[l][countBytesWidth];
     signal input outputCountBytes[l][countBytesWidth];
@@ -23,9 +25,11 @@ template TraceSignatureVerify(l) {
     signal input rBytes[l][32];
     signal input sBytes[l][32];
 
+    // ecdsa
     component hasher[l];
     for (i=0; i<l; i++) {
         hasher[i] = Keccak256(serviceNameBytesWidth + countBytesWidth*2 + nonceBytesWidth);
+        // hasher[i] = PedersenBytes(serviceNameBytesWidth + countBytesWidth*2 + nonceBytesWidth);
         for (j=0; j<serviceNameBytesWidth; j++) {
             hasher[i].hashInput[j] <== serviceNameBytes[j];
         }
@@ -39,7 +43,6 @@ template TraceSignatureVerify(l) {
             hasher[i].hashInput[serviceNameBytesWidth + countBytesWidth*2 + j] <== nonceBytes[i][j];
         }
     }
-
     component verifier[l];
     for (i=0; i<l; i++) {
         verifier[i] = ECDSAVerify();
@@ -49,8 +52,27 @@ template TraceSignatureVerify(l) {
         verifier[i].pubkeyBytes <== pubkeyBytes;
     }
 
-    signal output inputCount[l];
-    signal output outputCount[l];
+    // eddsa 
+    // component verifier[l];
+    // for (i=0; i<l; i++) {
+    //     verifier[i] = EdDSAVerify(44);
+    //     verifier[i].R8 <== rBytes[i];
+    //     verifier[i].S <== sBytes[i];
+    //     for (j=0; j<serviceNameBytesWidth; j++) {
+    //         verifier[i].msg[j] <== serviceNameBytes[j];
+    //     }
+    //     for (j=0; j<countBytesWidth; j++) {
+    //         verifier[i].msg[serviceNameBytesWidth + j] <== inputCountBytes[i][j];
+    //     }
+    //     for (j=0; j<countBytesWidth; j++) {
+    //         verifier[i].msg[serviceNameBytesWidth + countBytesWidth + j] <== outputCountBytes[i][j];
+    //     }
+    //     for (j=0; j<nonceBytesWidth; j++) {
+    //         verifier[i].msg[serviceNameBytesWidth + countBytesWidth*2 + j] <== nonceBytes[i][j];
+    //     }
+    //     verifier[i].A <== pubkeyBytes;
+    // }
+
     component packInputCount[l];
     component packOutputCount[l];
     component inputIsZero[l];
@@ -84,4 +106,11 @@ template TraceSignatureVerify(l) {
     component packFlag = Bits2Num(sumFlagOutBits);
     packFlag.in <== sumFlag.out;
     packFlag.out === l;
+
+    signal output inputCount[l];
+    signal output outputCount[l];
+    for (i=0; i<l; i++) {
+        inputCount[i] <== packInputCount[i].out;
+        outputCount[i] <== packOutputCount[i].out;
+    }
 }

@@ -1,5 +1,61 @@
 import { Point, getPublicKey, sign, utils } from '@noble/secp256k1';
 import { keccak_256, sha3_384 } from '@noble/hashes/sha3';
+import * as circomlibjs from 'circomlibjs';
+
+let pedersenHash: any;
+
+async function initPedersenHash() {
+    if (!pedersenHash) {
+        pedersenHash = await circomlibjs.buildPedersenHash();
+    }
+}
+
+function concatenateFields(fields: Uint8Array[]): Uint8Array {
+    let totalLength = fields.reduce((sum, field) => sum + field.length, 0);
+    let result = new Uint8Array(totalLength);
+    let offset = 0;
+    for (let field of fields) {
+        result.set(field, offset);
+        offset += field.length;
+    }
+    return result;
+}
+
+async function commitAccount(account: {
+    userAddress: string,
+    providerAddress: string,
+    nonce: string,
+    balance: string
+}): Promise<Uint8Array> {
+    await initPedersenHash();
+
+    const userAddress = parseBytes(account.userAddress);
+    const providerAddress = parseBytes(account.providerAddress);
+    const nonce = parseBytes(account.nonce);
+    const balance = parseBytes(account.balance);
+
+    const concatenated = concatenateFields([userAddress, providerAddress, nonce, balance]);
+    const hash = pedersenHash.hash(concatenated);
+    return new Uint8Array(hash);
+}
+
+async function hashRequest(request: {
+    serviceName: string,
+    inputCount: string,
+    outputCount: string,
+    nonce: string
+}): Promise<Uint8Array> {
+    await initPedersenHash();
+
+    const serviceName = parseBytes(request.serviceName);
+    const inputCount = parseBytes(request.inputCount);
+    const outputCount = parseBytes(request.outputCount);
+    const nonce = parseBytes(request.nonce);
+
+    const concatenated = concatenateFields([serviceName, inputCount, outputCount, nonce]);
+    const hash = pedersenHash.hash(concatenated);
+    return new Uint8Array(hash);
+}
 
 function generatePublicKey(privateKey: Uint8Array): { x: Uint8Array; y: Uint8Array } {
     const publicKey = getPublicKey(privateKey, false);  // false for uncompressed public key
@@ -72,6 +128,13 @@ async function main() {
     console.log("Public Key X:", pub0_arr);
     console.log("Public Key Y:", pub1_arr);
 
+    const request = {
+        serviceName: '["23", "195", "75", "108", "42", "129", "38", "229", "171", "223", "241", "105", "237", "137", "217", "105", "97", "110", "81", "60"]',
+        inputCount: '["143", "110", "41", "72", "222", "16", "210", "85", "166", "97", "47", "135", "245", "236", "81", "45", "183", "247", "171", "126"]',
+        outputCount: '["1", "0", "0", "0"]',
+        nonce: '["10", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"]'
+    };
+
     const message = new TextEncoder().encode("Hello, World!");
     const messageHash = keccakHash(message);
     console.log("Message Hash:", formatBytes(messageHash));
@@ -88,6 +151,17 @@ async function main() {
     var s_arr = bigintToArray(64, 4, s_big_int);
     console.log("Signature R:", r_arr);
     console.log("Signature S:", s_arr);
+
+    
+    const account = {
+        userAddress: '["23", "195", "75", "108", "42", "129", "38", "229", "171", "223", "241", "105", "237", "137", "217", "105", "97", "110", "81", "60"]',
+        providerAddress: '["143", "110", "41", "72", "222", "16", "210", "85", "166", "97", "47", "135", "245", "236", "81", "45", "183", "247", "171", "126"]',
+        nonce: '["1", "0", "0", "0"]',
+        balance: '["10", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"]'
+    };
+
+    const commitment = await commitAccount(account);
+    console.log("Account Commitment:", Array.from(commitment).map(b => b.toString()).join(', '));
 }
 
 main().catch(console.error);

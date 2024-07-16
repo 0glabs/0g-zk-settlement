@@ -2,8 +2,8 @@ pragma circom 2.0.0;
 
 include "../../node_modules/circomlib/circuits/bitify.circom";
 include "../../node_modules/circomlib/circuits/comparators.circom";
-include "../keccak/keccak_bytes.circom";
-include "../keccak/bytes_to_num.circom";
+include "../hasher/keccak_bytes.circom";
+include "../utils/bytes_to_num.circom";
 include "./lookup.circom";
 
 template BalanceTraceCheck(l) {
@@ -77,6 +77,7 @@ template BalanceTraceCheck(l) {
     
     component bytefyFinalBalance = Num2Bytes(balanceBytesWidth);
     bytefyFinalBalance.in <== packBalance.out - costAccumulator[l-1];
+    log("finalBalance:", packBalance.out - costAccumulator[l-1]);
     signal output finalBalance[balanceBytesWidth];
     finalBalance <== bytefyFinalBalance.out;
 }

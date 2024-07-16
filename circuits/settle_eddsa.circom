@@ -1,11 +1,9 @@
 include "../node_modules/circomlib/circuits/comparators.circom";
-include "./eth/flatten_pubkey.circom";
-include "./eth/pubkey_to_addr.circom";
-include "./settlement/commit_account.circom";
-include "./settlement/lookup.circom";
-include "./settlement/check_balance_trace.circom";
-include "./settlement/check_nonce_trace.circom";
-include "./settlement/verify_trace_signature.circom";
+include "./settlement_eddsa/commit_account.circom";
+include "./settlement_eddsa/lookup.circom";
+include "./settlement_eddsa/check_balance_trace.circom";
+include "./settlement_eddsa/check_nonce_trace.circom";
+include "./settlement_eddsa/verify_trace_signature.circom";
 
 // l: trace length
 template SettleTrace(l) {
@@ -25,7 +23,9 @@ template SettleTrace(l) {
     
     // request content
     // every settlment just process one account, so the pubkey should be same
-    signal input reqPubkey[2][32];
+    // ecdsa
+    // signal input reqPubkey[2][32];
+    signal input reqPubkey[32];
     signal input reqNonce[l][nonceBytesWidth];
     signal input reqServiceName[serviceNameBytesWidth]; // string:uint256
     signal input reqInputCount[l][countBytesWidth];
@@ -63,9 +63,9 @@ template SettleTrace(l) {
     old_commitment <== accountCommit.commitment;
 
     // check pubkey and address are mathched    
-    component pubToAddr = PubkeyToAddress();
-    pubToAddr.pubkeyBytes <== reqPubkey;
-    pubToAddr.address === accUserAddress;
+    // component pubToAddr = PubkeyToAddress();
+    // pubToAddr.pubkeyBytes <== reqPubkey;
+    // pubToAddr.address === accUserAddress;
 
     // check nonce is valid
     component checkNonceeTrace = NonceTraceCheck(l);

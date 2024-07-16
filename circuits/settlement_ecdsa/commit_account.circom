@@ -1,5 +1,5 @@
 pragma circom 2.0.0;
-include "../keccak/keccak_bytes.circom";
+include "../hasher/keccak_bytes.circom";
 
 template AccountCommit() {
     var i;

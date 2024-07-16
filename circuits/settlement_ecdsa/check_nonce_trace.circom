@@ -1,5 +1,5 @@
 pragma circom 2.0.0;
-include "../keccak/bytes_to_num.circom";
+include "../utils/bytes_to_num.circom";
 
 template NonceTraceCheck(l) {
     var i;
@@ -20,7 +20,7 @@ template NonceTraceCheck(l) {
     for (i=1; i<l; i++) {
         packNonce[i].out === packNonce[i-1].out + 1;
     }
-
+    log("finalNonce:", packNonce[l-1].out);
     component bytefyFinal = Num2Bytes(4);
     bytefyFinal.in <== packNonce[l-1].out;
     signal output finalNonce[nonceBytesWidth];
