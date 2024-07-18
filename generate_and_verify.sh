@@ -1,9 +1,9 @@
 #!/bin/bash
 
-PHASE1=./circuits/pot22_final.ptau
-BUILD_DIR=./build_ecdsa
+PHASE1=./circuits/pot20_final.ptau
+BUILD_DIR=./build_eddsa
 CIRCUIT_PATH=./circuits
-CIRCUIT_NAME=settle_ecdsa
+CIRCUIT_NAME=settle_eddsa
 
 if [ -f "$PHASE1" ]; then
     echo "Found Phase 1 ptau file"

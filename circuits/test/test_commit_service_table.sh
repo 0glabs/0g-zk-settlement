@@ -1,8 +1,8 @@
 #!/bin/bash
 
 PHASE1=../pot20_final.ptau
-BUILD_DIR=./build_verify_trace_signature
-CIRCUIT_NAME=test_verify_trace_signature
+BUILD_DIR=./build_commit_service_table
+CIRCUIT_NAME=test_commit_service_table
 NODE_MEMORY="8192"
 
 if [ -f "$PHASE1" ]; then

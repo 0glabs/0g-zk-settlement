@@ -1,8 +1,9 @@
 #!/bin/bash
 
 PHASE1=../pot20_final.ptau
-BUILD_DIR=./build_check_balance_trace
-CIRCUIT_NAME=test_check_balance_trace
+BUILD_DIR=./build_verify_signature
+CIRCUIT_NAME=test_verify_signature
+NODE_MEMORY="8192"
 
 if [ -f "$PHASE1" ]; then
     echo "Found Phase 1 ptau file"
@@ -30,7 +31,7 @@ echo "DONE ($((end-start))s)"
 
 echo "****GENERATING ZKEY 0****"
 start=`date +%s`
-npx snarkjs groth16 setup "$BUILD_DIR"/"$CIRCUIT_NAME".r1cs "$PHASE1" "$BUILD_DIR"/"$CIRCUIT_NAME"_0.zkey
+NODE_OPTIONS="--max-old-space-size=$NODE_MEMORY" npx snarkjs groth16 setup "$BUILD_DIR"/"$CIRCUIT_NAME".r1cs "$PHASE1" "$BUILD_DIR"/"$CIRCUIT_NAME"_0.zkey
 end=`date +%s`
 echo "DONE ($((end-start))s)"
 
@@ -48,7 +49,7 @@ echo "DONE ($((end-start))s)"
 
 echo "****VERIFYING FINAL ZKEY****"
 start=`date +%s`
-npx snarkjs zkey verify "$BUILD_DIR"/"$CIRCUIT_NAME".r1cs "$PHASE1" "$BUILD_DIR"/"$CIRCUIT_NAME".zkey
+NODE_OPTIONS="--max-old-space-size=$NODE_MEMORY" npx snarkjs zkey verify "$BUILD_DIR"/"$CIRCUIT_NAME".r1cs "$PHASE1" "$BUILD_DIR"/"$CIRCUIT_NAME".zkey
 end=`date +%s`
 echo "DONE ($((end-start))s)"
 

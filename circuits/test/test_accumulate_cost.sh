@@ -1,8 +1,8 @@
 #!/bin/bash
 
 PHASE1=../pot20_final.ptau
-BUILD_DIR=./build_check_nonce_trace
-CIRCUIT_NAME=test_check_nonce_trace
+BUILD_DIR=./build_accumulate_cost
+CIRCUIT_NAME=test_accumulate_cost
 
 if [ -f "$PHASE1" ]; then
     echo "Found Phase 1 ptau file"

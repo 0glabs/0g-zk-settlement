@@ -1,98 +1,64 @@
 include "../node_modules/circomlib/circuits/comparators.circom";
 include "./settlement_eddsa/commit_account.circom";
-include "./settlement_eddsa/lookup.circom";
-include "./settlement_eddsa/check_balance_trace.circom";
-include "./settlement_eddsa/check_nonce_trace.circom";
-include "./settlement_eddsa/verify_trace_signature.circom";
+include "./settlement_eddsa/check_balance.circom";
+include "./settlement_eddsa/check_nonce.circom";
+include "./settlement_eddsa/verify_signature.circom";
 
 // l: trace length
 template SettleTrace(l) {
     var i;
     var j; 
     
-    var commitmentBytesWidth = 32;
-    var balanceBytesWidth = 16; // uint128:[u8;16]
-    var serviceNameBytesWidth = 32; // string:[u8;32]
-    var servicePriceBytesWidth = 4; // uint32:[u8;4]
+    var serviceNameBytesWidth = 16; // string:[u8;32]
     var countBytesWidth = 4; // uint32:[u8;4]
-    var addressBytesWidth = 20; // unit160:[u8;20]
     var nonceBytesWidth = 4; // unit32:[u8;4]
-    var priceTableLen = 3;
-    var numBits = 8; // pubkey bits per chunk
-    // var k = 32; // pubkey chunks
-    
-    // request content
-    // every settlment just process one account, so the pubkey should be same
-    // ecdsa
-    // signal input reqPubkey[2][32];
-    signal input reqPubkey[32];
-    signal input reqNonce[l][nonceBytesWidth];
-    signal input reqServiceName[serviceNameBytesWidth]; // string:uint256
-    signal input reqInputCount[l][countBytesWidth];
-    signal input reqOutputCount[l][countBytesWidth];
-    // signal input createdAt[l];
-    signal input r[l][32];
-    signal input s[l][32];
+    var dataBytesWidth = 8; // unit64:[u8;4]
+    var addressBytesWidth = 20; // unit160:[u8; 20]
+    var balanceBytesWidth = 8; // unit64:[u8; 8]
+    var requestBytesWidth = nonceBytesWidth + countBytesWidth * 2 + dataBytesWidth * 2 + balanceBytesWidth + serviceNameBytesWidth + addressBytesWidth * 2;
+    var accountBytesWidth = nonceBytesWidth + balanceBytesWidth + addressBytesWidth*2;
 
+    // request content
+    // every settlment just process one account, so the signer should be same
+    signal input signer[32];
+    signal input r8[l][32];
+    signal input s[l][32];
+    signal input serializedRequest[l][requestBytesWidth];
 
     // verify signature
-    component sigVerifier = TraceSignatureVerify(l);
-    sigVerifier.pubkeyBytes <== reqPubkey;
-    sigVerifier.serviceNameBytes <== reqServiceName;
-    sigVerifier.inputCountBytes <== reqInputCount;
-    sigVerifier.outputCountBytes <== reqOutputCount;
-    sigVerifier.nonceBytes <== reqNonce;
-    sigVerifier.rBytes <== r;
-    sigVerifier.sBytes <== s;
-
+    component sigVerifier = SignatureVerify(l);
+    sigVerifier.serializedRequest <== serializedRequest;
+    sigVerifier.r8 <== r8;
+    sigVerifier.s <== s;
+    sigVerifier.pubkey <== signer;
 
     // account content
     // every settlment just process one account
-    signal input accUserAddress[addressBytesWidth]; 
-    signal input accProviderAddress[addressBytesWidth]; 
-    signal input accNonce[nonceBytesWidth]; 
-    signal input accBalance[balanceBytesWidth]; 
-    
-    // calculate init account commitment
+    signal input serializedAccount[accountBytesWidth];
     component accountCommit = AccountCommit();
-    accountCommit.userAddress <== accUserAddress;
-    accountCommit.providerAddress <== accProviderAddress;
-    accountCommit.nonce <== accNonce;
-    accountCommit.balance <== accBalance;
-    signal output old_commitment[commitmentBytesWidth];
-    old_commitment <== accountCommit.commitment;
+    accountCommit.serializedAccount <== serializedAccount;
+    signal output old_commitment[2];
+    old_commitment <== accountCommit.accountCommitment;
 
-    // check pubkey and address are mathched    
-    // component pubToAddr = PubkeyToAddress();
-    // pubToAddr.pubkeyBytes <== reqPubkey;
-    // pubToAddr.address === accUserAddress;
+    // check signers for request in signer in account are mathched
 
     // check nonce is valid
-    component checkNonceeTrace = NonceTraceCheck(l);
-    checkNonceeTrace.nonce <== reqNonce;
-    checkNonceeTrace.initNonce <== accNonce;
+    component checkNonce = NonceCheck(l);
+    checkNonce.nonce <== sigVerifier.nonce;
+    checkNonce.initNonce <== accountCommit.nonce;
+    signal output nonce;
+    nonce <== checkNonce.finalNonce;
 
     // check balance trace is valid
-    component checkBalanceTrace = BalanceTraceCheck(l);
-    signal input priceTableKeys[priceTableLen][serviceNameBytesWidth];
-    signal input priceTableValues[priceTableLen][servicePriceBytesWidth];
-    checkBalanceTrace.tableKeys <== priceTableKeys;
-    checkBalanceTrace.tableValues <== priceTableValues;
-    checkBalanceTrace.serviceName <== reqServiceName;
-    checkBalanceTrace.inputCount <== sigVerifier.inputCount;
-    checkBalanceTrace.outputCount <== sigVerifier.outputCount;
-    checkBalanceTrace.initBalance <== accBalance;
-    signal output servicePriceTableCommitment[commitmentBytesWidth];
-    servicePriceTableCommitment <== checkBalanceTrace.priceTableCommitment;
-
-    // update commitment
-    signal new_commitment[commitmentBytesWidth];
-    component newAccountCommit = AccountCommit();
-    newAccountCommit.userAddress <== accUserAddress;
-    newAccountCommit.providerAddress <== accProviderAddress;
-    newAccountCommit.nonce <== checkNonceeTrace.finalNonce;
-    newAccountCommit.balance <== checkBalanceTrace.finalBalance;
-    new_commitment <== newAccountCommit.commitment;
+    component checkBalance = BalanceCheck(l);
+    checkBalance.initBalance <== accountCommit.balance;
+    checkBalance.inputCount <== sigVerifier.inputCount;
+    checkBalance.outputCount <== sigVerifier.outputCount;
+    checkBalance.updatedAt <== sigVerifier.updatedAt;
+    checkBalance.createdAt <== sigVerifier.createdAt;
+    checkBalance.price <== sigVerifier.price;
+    signal output balance;
+    balance <== checkBalance.finalBalance;
 }
 
-component main = SettleTrace(1);
+component main = SettleTrace(4);
