@@ -20,22 +20,22 @@ app.get('/vkey', async (req, res) => {
 
 app.post('/prove', async (req, res) => {
     console.log('Proof generation started');
-    res.writeHead(200, {
-        'Content-Type': 'application/json',
-        'Transfer-Encoding': 'chunked'
-    });
-
-    res.write(JSON.stringify({ status: 'Proof generation started' }) + '\n');
-
     try {
-        const { proof, publicSignals } = await generateProof(req.body);
+        const inputs = Object.keys(req.body).length > 0 ? req.body : null;
+        const { proof, publicSignals } = await generateProof(inputs);
         console.log('Proof generation completed');
-        res.write(JSON.stringify({ status: 'Proof generation completed', proof, publicSignals }));
-        res.end();
+        res.json({ 
+            status: 'Completed',
+            proof: proof,
+            publicSignals: publicSignals
+        });
     } catch (error) {
-        console.error('Error generating proof:', error);
-        res.write(JSON.stringify({ status: 'Error', message: error.message }));
-        res.end();
+        console.error('Error:', error);
+        res.status(500).json({ 
+            status: 'Error', 
+            message: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 });
 
@@ -53,8 +53,7 @@ app.get('/verifier-contract', async (req, res) => {
 });
 
 app.post('/solidity-calldata', async (req, res) => {
-    console.log('Generating or retrieving Solidity calldata');
-    
+    console.log('Generating Solidity calldata');
     try {
         const inputs = Object.keys(req.body).length > 0 ? req.body : null;
         const calldata = await getSolidityCalldata(inputs);

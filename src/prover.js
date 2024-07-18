@@ -40,14 +40,13 @@ async function getVerifierContract() {
 }
 
 async function generateProof(inputs) {
+    if (!inputs) {
+        throw new Error("Input is required");
+    }
+
     try {
         console.log('Generating new proof and public input.');
         const { proof, publicSignals } = await snarkjs.groth16.fullProve(inputs, config.wasmPath, config.zkeyPath);
-        
-        // save proof and public inputs
-        await fs.writeFile(path.join(config.buildDir, 'proof.json'), JSON.stringify(proof, null, 2));
-        await fs.writeFile(path.join(config.buildDir, 'public.json'), JSON.stringify(publicSignals, null, 2));
-
         return { proof, publicSignals };
     } catch (error) {
         console.error('Error generating proof:', error);
@@ -55,39 +54,15 @@ async function generateProof(inputs) {
     }
 }
 
-async function getSolidityCalldata(inputs = null) {
-    const proofPath = path.join(config.buildDir, 'proof.json');
-    const publicPath = path.join(config.buildDir, 'public.json');
-    const inputPath = path.join(config.buildDir, 'input.json');
-
-    let proof, publicSignals;
-
-    if (await fileExists(proofPath) && await fileExists(publicPath)) {
-        console.log('Existing proof and public input files found. Reading from files.');
-        proof = JSON.parse(await fs.readFile(proofPath, 'utf8'));
-        publicSignals = JSON.parse(await fs.readFile(publicPath, 'utf8'));
-        
-        if (!inputs) {
-            // 如果没有提供新的输入，尝试读取保存的输入
-            if (await fileExists(inputPath)) {
-                lastUsedInput = JSON.parse(await fs.readFile(inputPath, 'utf8'));
-            } else if (!lastUsedInput) {
-                throw new Error("No input provided and no saved input found");
-            }
-        } else {
-            // 如果提供了新的输入，更新并保存
-            lastUsedInput = inputs;
-            await fs.writeFile(inputPath, JSON.stringify(inputs, null, 2));
-        }
-    } else {
-        if (!inputs && !lastUsedInput) {
-            throw new Error("Input is required for the first call");
-        }
-        console.log('No existing proof and public input, prepare to genereate new...');
-        ({ proof, publicSignals } = await generateProof(inputs || lastUsedInput));
+async function getSolidityCalldata(inputs) {
+    if (!inputs) {
+        throw new Error("Input is required");
     }
 
     try {
+        console.log('Generating new proof...');
+        const { proof, publicSignals } = await generateProof(inputs);
+
         let res;
         if (proof.protocol === "groth16") {
             res = await snarkjs.groth16.exportSolidityCallData(proof, publicSignals);

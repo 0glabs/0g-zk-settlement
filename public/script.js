@@ -19,7 +19,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     proveButton.addEventListener('click', async function() {
         try {
-            const inputData = JSON.parse(proofInput.value);
+            let inputData = null;
+            if (proofInput.value.trim() !== '') {
+                inputData = JSON.parse(proofInput.value);
+            }
             resultDiv.innerHTML = '<p>Generating proof... This may take a while.</p>';
             
             const response = await fetch('http://localhost:3000/prove', {
@@ -27,12 +30,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(inputData)
+                body: inputData ? JSON.stringify(inputData) : '{}'
             });
-
+    
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'An error occurred');
+            }
+    
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
-
+    
             while (true) {
                 const { value, done } = await reader.read();
                 if (done) break;
@@ -44,13 +52,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (data.status === 'Proof generation started') {
                         resultDiv.innerHTML += '<p>Proof generation in progress...</p>';
                     } else if (data.status === 'Proof generation completed') {
-                        resultDiv.innerHTML = '<h3>Proof Result:</h3><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                        resultDiv.innerHTML = '<h3>Proof Result:</h3><pre>' + JSON.stringify(data.proof, null, 2) + '</pre>';
+                        resultDiv.innerHTML += '<h3>Public Signals:</h3><pre>' + JSON.stringify(data.publicSignals, null, 2) + '</pre>';
                     } else if (data.status === 'Error') {
                         resultDiv.innerHTML = '<h3>Error:</h3><p>' + data.message + '</p>';
+                    } else {
+                        resultDiv.innerHTML += '<p>' + data.message + '</p>';
                     }
                 }
             }
         } catch (error) {
+            console.error("Error:", error);
             resultDiv.innerHTML = '<h3>Error:</h3><p>' + error.message + '</p>';
         }
     });
