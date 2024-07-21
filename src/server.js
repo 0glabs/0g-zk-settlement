@@ -10,8 +10,9 @@ const {
     getVerificationKey,
     getVerifierContract
 } = require('./prover');
-const { sign, genProofInput } = require('./signer');
+const { sign, genProofInput, genKeyPair } = require('./signer');
 const utils = require('../helper/utils');
+const { generateKeyPair } = require('crypto');
 
 const app = express();
 
@@ -100,6 +101,20 @@ app.post('/proof-input', async (req, res) => {
         res.send(utils.jsonifyData(responseBody, true));
     } catch (error) {
         console.error('Error generating proof input:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/sign-keypair', async (req, res) => {
+    try {
+        const {privkey, pubkey} = await genKeyPair();
+        const responseBody = {
+            privkey: privkey,
+            pubkey: pubkey,
+        };
+        res.setHeader('Content-Type', 'application/json');
+        res.send(utils.jsonifyData(responseBody));
+    } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });

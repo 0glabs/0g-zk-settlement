@@ -66,7 +66,17 @@ async function genProofInput(requestBody) {
     return helper.generateProofInput(requestInstances, accountInstance, l, privkey);
 }
 
+async function genKeyPair(requestBody) {
+    await eddsa.init();
+
+    const privkey = eddsa.babyJubJubGeneratePrivateKey();
+    const pubkey = eddsa.babyJubJubGeneratePublicKey(privkey);
+
+    return {privkey, pubkey};
+}
+
 module.exports = {
     sign,
-    genProofInput
+    genProofInput,
+    genKeyPair
 };

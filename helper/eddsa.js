@@ -1,5 +1,4 @@
 const circomlibjs = require('circomlibjs');
-const utils = require('circomlibjs').utils;
 
 let eddsa;
 let babyjubjub;
@@ -18,7 +17,7 @@ async function init() {
 }
 
 function babyJubJubGeneratePrivateKey() {
-    return eddsa.pruneBuffer(utils.randomBytes(32));
+    return babyjubjub.F.random();
 }
 
 function babyJubJubGeneratePublicKey(privateKey) {
