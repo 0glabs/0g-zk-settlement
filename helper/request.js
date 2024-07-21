@@ -146,7 +146,6 @@ class Request {
             '0x' + userAddress.toString(16),
             '0x' + providerAddress.toString(16)
         );
-        return new Request(nonce, inputCount, outputCount, price.toString(), updatedAt.toString(), createdAt.toString(), serviceName.toString(16), userAddress.toString(16), providerAddress.toString(16));
     }
 }
 

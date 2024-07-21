@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node helper/helper.js",
+    "test": "node helper/main.js",
     "check_memory": "ts-node check_memory.ts",
     "compile": "sh ./scripts/compile.sh",
     "setup": "node --max-old-space-size=8192 ./scripts/setup.js",
