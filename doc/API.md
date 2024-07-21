@@ -1,4 +1,4 @@
-# ZK-Settlement Agent API Documentation
+# zkSettlement Agent API
 
 This document outlines the API endpoints for the ZK-Settlement agent.
 
