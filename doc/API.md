@@ -144,7 +144,7 @@ Generates a new Ed25519 key pair.
     ```
 **Example:**
 ```bash
-curl http://localhost:3000/generate-keypair
+curl http://localhost:3000/sign-keypair
 ```
 
 ## Error Handling
