@@ -15,8 +15,6 @@ async function sign(requestBody) {
         throw new Error('Missing required fields in request body');
     }
 
-    const pubkey = eddsa.babyJubJubGeneratePublicKey(privkey);
-
     const requestInstances = requests.map(data => new Request(
         data.nonce,
         data.inputCount,
@@ -29,17 +27,17 @@ async function sign(requestBody) {
         data.providerAddress.toString()
     ));
 
-    return helper.signAndVerifyRequests(requestInstances, privkey, pubkey);
+    return helper.signRequests(requestInstances, privkey);
 }
 
 async function genProofInput(requestBody) {
     await eddsa.init();
 
     // 从请求体中提取数据
-    const { requests, account, l, privkey } = requestBody;
+    const { requests, account, l, pubkey, signatures } = requestBody;
 
     // 验证必要的字段
-    if (!requests || !account || !l || !privkey) {
+    if (!requests || !account || !l || !pubkey || !signatures) {
         throw new Error('Missing required fields in request body');
     }
 
@@ -62,8 +60,8 @@ async function genProofInput(requestBody) {
         account.userAddress,
         account.providerAddress
     );
-
-    return helper.generateProofInput(requestInstances, accountInstance, l, privkey);
+    
+    return helper.generateProofInput(requestInstances, accountInstance, l, pubkey, signatures);
 }
 
 async function genKeyPair(requestBody) {
@@ -75,8 +73,33 @@ async function genKeyPair(requestBody) {
     return {privkey, pubkey};
 }
 
+async function verifySig(requestBody) {
+    await eddsa.init();
+
+    const { requests, pubkey, signatures } = requestBody;
+    
+    // 验证必要的字段
+    if (!requests || !pubkey || !signatures) {
+        throw new Error('Missing required fields in request body');
+    }
+    
+    const requestInstances = requests.map(req => new Request(
+        req.nonce,
+        req.inputCount,
+        req.outputCount,
+        req.price,
+        req.updatedAt,
+        req.createdAt,
+        req.serviceName,
+        req.userAddress,
+        req.providerAddress
+    ));
+    return await helper.verifySig(requestInstances, signatures, pubkey);
+}
+
 module.exports = {
     sign,
     genProofInput,
-    genKeyPair
+    genKeyPair,
+    verifySig
 };

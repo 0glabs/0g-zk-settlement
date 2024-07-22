@@ -3,19 +3,24 @@ const utils = require('./utils');
 const { Request } = require('./request');
 const { Account } = require('./account');
 
-async function generateProofInput(requests, account, l, privkey) {
+async function generateProofInput(requests, account, l, pubvkey, signBuff) {
     await eddsa.init();
-    const babyJubJubPrivateKey = privkey;
-    const babyJubJubPublicKey = eddsa.babyJubJubGeneratePublicKey(babyJubJubPrivateKey);
+    const signer = eddsa.packPoint(pubvkey);
 
-    const signResult = await signAndVerifyRequests(requests, babyJubJubPrivateKey, babyJubJubPublicKey);
-    const paddingResult = await paddingSignature(requests, signResult.r8, signResult.s, l);
+    const r8 = [];
+    const s = [];
+    for (let i = 0; i < signBuff.length; i++) {
+        r8.push(new Uint8Array(signBuff[i].slice(0, 32)));
+        s.push(new Uint8Array(signBuff[i].slice(32, 64)));
+    }
+
+    const paddingResult = await paddingSignature(requests, r8, s, l);
 
     const serializedAccount = account._serialize();
 
     const input = {
         serializedRequest: paddingResult.serializedRequestTrace,
-        signer: signResult.packPubkey,
+        signer: signer,
         r8: paddingResult.r8,
         s: paddingResult.s,
         serializedAccount: serializedAccount
@@ -26,6 +31,8 @@ async function generateProofInput(requests, account, l, privkey) {
 
 // 辅助函数：签名并验证请求
 async function signAndVerifyRequests(requests, babyJubJubPrivateKey, babyJubJubPublicKey) {
+    await eddsa.init();
+
     const packPubkey = eddsa.packPoint(babyJubJubPublicKey);
     const signatures = [];
     const r8 = [];
@@ -43,8 +50,32 @@ async function signAndVerifyRequests(requests, babyJubJubPrivateKey, babyJubJubP
         r8.push(packedSig.slice(0, 32));
         s.push(packedSig.slice(32, 64));
     }
-
     return { packPubkey, r8, s };
+}
+
+async function signRequests(requests, babyJubJubPrivateKey) {
+    await eddsa.init();
+
+    const serializedRequestTrace = requests.map(request => request.serialize());
+    const signatures = [];
+    for (let i = 0; i < serializedRequestTrace.length; i++) {
+        const signature = await eddsa.babyJubJubSignature(serializedRequestTrace[i], babyJubJubPrivateKey);
+        signatures.push(eddsa.packSignature(signature));
+    }
+    return signatures;
+}
+
+async function verifySig(requests, signatures, babyJubJubPublicKey) {
+    await eddsa.init();
+
+    const isValid = [];
+    const serializedRequestTrace = requests.map(request => request.serialize());
+
+    for (let i = 0; i < serializedRequestTrace.length; i++) {
+        const unpackSignature = eddsa.unpackSignature(new Uint8Array(signatures[i]));
+        isValid.push(await eddsa.babyJubJubVerify(serializedRequestTrace[i], unpackSignature, babyJubJubPublicKey));
+    }
+    return isValid;
 }
 
 // 辅助函数：填充签名
@@ -81,7 +112,16 @@ function paddingSignature(requests, r8, s, l) {
     return { serializedRequestTrace, r8, s };
 }
 
+async function genPubkey(privkey) {
+    await eddsa.init();
+
+    return eddsa.babyJubJubGeneratePublicKey(privkey);
+}
+
 module.exports = {
     generateProofInput,
-    signAndVerifyRequests
+    signAndVerifyRequests,
+    signRequests,
+    verifySig,
+    genPubkey
 };

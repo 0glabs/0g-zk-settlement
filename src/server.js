@@ -10,7 +10,7 @@ const {
     getVerificationKey,
     getVerifierContract
 } = require('./prover');
-const { sign, genProofInput, genKeyPair } = require('./signer');
+const { sign, genProofInput, genKeyPair, verifySig } = require('./signer');
 const utils = require('../helper/utils');
 const { generateKeyPair } = require('crypto');
 
@@ -71,15 +71,10 @@ app.post('/solidity-calldata', async (req, res) => {
 
 app.post('/signature', async (req, res) => {
     try {
-        const result = await sign(req.body);
+        const signatures = await sign(req.body);
         const responseBody = {
-            signer: result.packPubkey,
-            signatures: {
-                R8: result.r8,
-                S: result.s
-            }
+            signatures: signatures
         };
-
         res.setHeader('Content-Type', 'application/json');
         res.send(utils.jsonifyData(responseBody));
     } catch (error) {
@@ -93,6 +88,7 @@ app.post('/proof-input', async (req, res) => {
         const result = await genProofInput(req.body);
         const responseBody = {
             serializedRequest: result.serializedRequest,
+            signer: result.signer,
             r8: result.r8,
             s: result.s,
             serializedAccount: result.serializedAccount
@@ -115,6 +111,17 @@ app.get('/sign-keypair', async (req, res) => {
         res.setHeader('Content-Type', 'application/json');
         res.send(utils.jsonifyData(responseBody));
     } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/check-sign', async (req, res) => {
+    try {
+        const isValid = await verifySig(req.body);
+        res.setHeader('Content-Type', 'application/json');
+        res.send(isValid);
+    } catch (error) {
+        console.error('Error in /sign route:', error);
         res.status(500).json({ error: error.message });
     }
 });

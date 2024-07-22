@@ -44,6 +44,10 @@ function hash(msg) {
     return pedersenHash.hash(msg);
 }
 
+function unpackSignature(signBuff) {
+    return eddsa.unpackSignature(signBuff);
+}
+
 module.exports = {
     init,
     babyJubJubGeneratePrivateKey,
@@ -52,5 +56,6 @@ module.exports = {
     babyJubJubVerify,
     packSignature,
     packPoint,
-    hash
+    hash,
+    unpackSignature
 };
