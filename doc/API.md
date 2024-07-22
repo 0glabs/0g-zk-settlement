@@ -49,10 +49,7 @@ Generates signatures for the provided data.
     ```json
     {
       "signer": [Signer public key],
-      "signatures": {
-        "R8": [R8 component of signatures],
-        "S": [S component of signatures]
-      }
+      "signatures": [packed signatures]
     }
     ```
 - **Example:** 
