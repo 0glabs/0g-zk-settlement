@@ -1,4 +1,4 @@
-const { runTrustedSetup } = require('../src/setup.js');
+const { runTrustedSetup } = require('../setup.js');
 
 runTrustedSetup()
   .then(() => {

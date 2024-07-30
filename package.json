@@ -4,11 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node helper/main.js",
-    "check_memory": "ts-node check_memory.ts",
-    "compile": "sh ./scripts/compile.sh",
-    "setup": "node --max-old-space-size=8192 ./scripts/setup.js",
-    "start": "node src/server.js"
+    "prepare_input": "node ./js/helper/main.js",
+    "check_memory": "ts-node ./js/check_memory.ts",
+    "compile": "sh ./js/scripts/compile.sh",
+    "setup": "node --max-old-space-size=8192 ./js/scripts/setup.js",
+    "start": "node ./js/server.js"
   },
   "author": "",
   "license": "ISC",
@@ -16,7 +16,7 @@
     "@noble/hashes": "^1.1.2",
     "@noble/secp256k1": "^1.7.1",
     "circomlib": "^2.0.5",
-    "snarkjs": "0.7.4",
+    "snarkjs": "^0.7.0",
     "express": "^4.17.1",
     "fs-extra": "^10.0.0",
     "cors": "^2.8.5",

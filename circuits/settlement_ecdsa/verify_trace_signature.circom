@@ -17,7 +17,7 @@ template TraceSignatureVerify(l) {
 
     // ecdsa
     signal input pubkeyBytes[2][32];
-    
+
     signal input serviceNameBytes[serviceNameBytesWidth]; // string:uint256
     signal input inputCountBytes[l][countBytesWidth];
     signal input outputCountBytes[l][countBytesWidth];
@@ -51,27 +51,6 @@ template TraceSignatureVerify(l) {
         verifier[i].msgHashBytes <== hasher[i].hashOutput;
         verifier[i].pubkeyBytes <== pubkeyBytes;
     }
-
-    // eddsa 
-    // component verifier[l];
-    // for (i=0; i<l; i++) {
-    //     verifier[i] = EdDSAVerify(44);
-    //     verifier[i].R8 <== rBytes[i];
-    //     verifier[i].S <== sBytes[i];
-    //     for (j=0; j<serviceNameBytesWidth; j++) {
-    //         verifier[i].msg[j] <== serviceNameBytes[j];
-    //     }
-    //     for (j=0; j<countBytesWidth; j++) {
-    //         verifier[i].msg[serviceNameBytesWidth + j] <== inputCountBytes[i][j];
-    //     }
-    //     for (j=0; j<countBytesWidth; j++) {
-    //         verifier[i].msg[serviceNameBytesWidth + countBytesWidth + j] <== outputCountBytes[i][j];
-    //     }
-    //     for (j=0; j<nonceBytesWidth; j++) {
-    //         verifier[i].msg[serviceNameBytesWidth + countBytesWidth*2 + j] <== nonceBytes[i][j];
-    //     }
-    //     verifier[i].A <== pubkeyBytes;
-    // }
 
     component packInputCount[l];
     component packOutputCount[l];

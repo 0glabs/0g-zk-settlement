@@ -1,8 +1,8 @@
-const { Request } = require('../helper/request');
-const { Account } = require('../helper/account');
-const eddsa = require('../helper/eddsa');
-const utils = require('../helper/utils');
-const helper = require('../helper/helper');
+const { Request } = require('./helper/request');
+const { Account } = require('./helper/account');
+const eddsa = require('./helper/eddsa');
+const utils = require('./helper/utils');
+const helper = require('./helper/helper');
 
 async function sign(requestBody) {
     await eddsa.init();

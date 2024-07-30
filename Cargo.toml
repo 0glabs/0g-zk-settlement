@@ -1,0 +1,42 @@
+[package]
+name = "zk-settlement"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+ark-groth16 = { version = "=0.4.0"}
+ark-ff = "0.4.1"
+ark-circom = { version = "0.1.0" }
+ark-ec = "0.4.1"
+ark-bn254 = "0.4"
+num-bigint = { version = "=0.4.3", default-features = false, features = ["rand"] }
+eyre = "0.6"
+ark-std = "0.4"
+actix-web = "4.0"
+thiserror = "1.0"
+ark-serialize = "0.4"
+# ethereum compat
+ethers-core = { version = "=2.0.7", default-features = false, optional = true }
+
+log = "0.4"
+env_logger = "0.9"
+hex = "0.4.3"
+
+[dependencies.impl-codec]
+version = "0.6.0"
+optional = true
+default-features = false
+
+[features]
+default = ["ark-groth16/parallel"]
+# cuda = ["ark-groth16/cuda-bn254"]
+# trace = ["ark-groth16/print-trace"]
+
+[patch.crates-io]
+wasmer = { git = "https://github.com/0glabs/wasmer.git", rev = "4c2dbdc" }
+ark-groth16 = { git = "https://github.com/0glabs/0g-groth16-gpu-zk-settlment-dep.git", rev = "4e5915b6024471c669a5473da4a1006724918fca" }
+# ark-groth16 = { path = "../0g-groth16-gpu" }
+ark-circom = { git = "https://github.com/0glabs/circom-compat.git", rev = "87b8855"}

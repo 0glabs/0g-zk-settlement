@@ -2,6 +2,7 @@ const snarkjs = require('snarkjs');
 const fs = require('fs').promises;
 const path = require('path');
 const config = require('./config');
+const { compileFunction } = require('vm');
 
 let lastUsedInput = null;
 
@@ -46,7 +47,16 @@ async function generateProof(inputs) {
 
     try {
         console.log('Generating new proof and public input.');
-        const { proof, publicSignals } = await snarkjs.groth16.fullProve(inputs, config.wasmPath, config.zkeyPath);
+        const start_cal_wnts = Date.now();
+        await snarkjs.wtns.calculate(inputs, config.wasmPath, config.wtnsPath, {});
+        const end_cal_wnts = Date.now();
+        const dua_cal_wnts = end_cal_wnts - start_cal_wnts;
+        console.log(`calculate witness time: ${dua_cal_wnts} ms`);
+        const start_gen_proof = Date.now();
+        const { proof, publicSignals } = await snarkjs.groth16.prove(config.zkeyPath, config.wtnsPath);
+        const end_gen_proof = Date.now();
+        const dua_gen_proof = end_gen_proof - start_gen_proof;
+        console.log(`generate proof time: ${dua_gen_proof} ms`);
         return { proof, publicSignals };
     } catch (error) {
         console.error('Error generating proof:', error);
@@ -62,7 +72,8 @@ async function getSolidityCalldata(inputs) {
     try {
         console.log('Generating new proof...');
         const { proof, publicSignals } = await generateProof(inputs);
-
+        console.log("proof:", proof);
+        console.log("publicSignals:", publicSignals);
         let res;
         if (proof.protocol === "groth16") {
             res = await snarkjs.groth16.exportSolidityCallData(proof, publicSignals);

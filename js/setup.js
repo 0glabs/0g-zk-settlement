@@ -21,11 +21,16 @@ async function runTrustedSetup() {
     try {
         console.log('****GENERATE ZKEY 0****');
         await measureTime(async () => {
-            await snarkjs.zKey.newZKey(
-                `${config.buildDir}/${config.circuitName}.r1cs`,
-                config.ptauPath,
-                `${config.buildDir}/${config.circuitName}_0.zkey`
-            );
+            try {
+                await snarkjs.zKey.newZKey(
+                    `${config.buildDir}/${config.circuitName}.r1cs`,
+                    config.ptauPath,
+                    `${config.buildDir}/${config.circuitName}_0.zkey`
+                );
+            } catch (innerError) {
+                console.error('Error generating zkey 0:', innerError);
+                throw new Error(`Failed to generate zkey 0: ${innerError.message}`);
+            }
         });
 
         console.log('****CONTRIBUTE TO THE PHASE 2 CEREMONY****');

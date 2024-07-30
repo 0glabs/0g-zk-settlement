@@ -61,4 +61,4 @@ template SettleTrace(l) {
     balance <== checkBalance.finalBalance;
 }
 
-component main = SettleTrace(4);
+component main = SettleTrace(40);

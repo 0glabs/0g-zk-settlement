@@ -3,7 +3,7 @@
 CIRCUIT_PATH=./circuits
 BUILD_DIR=./build_eddsa
 CIRCUIT_NAME=settle_eddsa
-PHASE1="$CIRCUIT_PATH"/pot20_final.ptau
+PHASE1="$CIRCUIT_PATH"/pot19_final.ptau
 
 if [ -f "$PHASE1" ]; then
     echo "Found Phase 1 ptau file"
