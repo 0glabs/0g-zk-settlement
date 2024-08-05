@@ -29,6 +29,12 @@ yarn compile
 ```shell
 yarn setup
 ```
+
+## Start service
+```shell
+yarn start
+```
+
 ## Access with web
 Open your web browser (such as Chrome, Firefox, etc.). Enter in the address bar: http://[server IP address]:3000 (for example: http://127.0.0.1:3000). You should see the zkSettlment prover agent web interface.
 ![image.png](./doc/images/interface.png)

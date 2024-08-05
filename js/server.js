@@ -57,6 +57,18 @@ app.get('/verifier-contract', async (req, res) => {
     }
 });
 
+app.get('/batch-verifier-contract', async (req, res) => {
+    console.log('Generating verifier contract');
+    try {
+        const verifierCode = await getVerifierContract(true);
+        res.setHeader('Content-Type', 'text/plain');
+        res.send(verifierCode);
+        console.log('Verifier contract is generated');
+    } catch (error) {
+        handleError(res, error);
+    }
+});
+
 app.post('/solidity-calldata', async (req, res) => {
     console.log('Generating Solidity calldata');
     try {

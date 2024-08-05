@@ -2,9 +2,6 @@ const snarkjs = require('snarkjs');
 const fs = require('fs').promises;
 const path = require('path');
 const config = require('./config');
-const { compileFunction } = require('vm');
-
-let lastUsedInput = null;
 
 async function fileExists(filePath) {
     try {
@@ -24,15 +21,20 @@ async function getVerificationKey() {
     }
 }
 
-async function getVerifierContract() {
+async function getVerifierContract(if_batch=false) {
     try {
         const templates = {
             groth16: await fs.readFile(path.join(__dirname, '../node_modules/snarkjs/templates/verifier_groth16.sol.ejs'), 'utf8'),
             plonk: await fs.readFile(path.join(__dirname, '../node_modules/snarkjs/templates/verifier_plonk.sol.ejs'), 'utf8'),
-            fflonk: await fs.readFile(path.join(__dirname, '../node_modules/snarkjs/templates/verifier_fflonk.sol.ejs'), 'utf8')
+            fflonk: await fs.readFile(path.join(__dirname, '../node_modules/snarkjs/templates/verifier_fflonk.sol.ejs'), 'utf8'),
+            batchGroth16: await fs.readFile(path.join(__dirname, '../contract/batch_verifier.sol.ejs'), 'utf8')
         };
-
-        const verifierCode = await snarkjs.zKey.exportSolidityVerifier(config.zkeyPath, templates);
+        let verifierCode;
+        if (if_batch) {
+            verifierCode = await snarkjs.zKey.exportSolidityVerifier(config.zkeyPath, { groth16: templates.batchGroth16 });
+        } else {
+            verifierCode = await snarkjs.zKey.exportSolidityVerifier(config.zkeyPath, templates);
+        }
         return verifierCode;
     } catch (error) {
         console.error('Error generating verifier contract:', error);

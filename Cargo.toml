@@ -32,7 +32,7 @@ default-features = false
 
 [features]
 default = ["ark-groth16/parallel"]
-# cuda = ["ark-groth16/cuda-bn254"]
+cuda = ["ark-groth16/cuda-bn254"]
 # trace = ["ark-groth16/print-trace"]
 
 [patch.crates-io]
