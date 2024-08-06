@@ -1,8 +1,8 @@
 #!/bin/bash
 
 CIRCUIT_PATH=./circuits
-BUILD_DIR=./build_eddsa
-CIRCUIT_NAME=settle_eddsa
+BUILD_DIR=./build
+CIRCUIT_NAME=main
 PHASE1="$CIRCUIT_PATH"/pot19_final.ptau
 
 if [ -f "$PHASE1" ]; then
@@ -19,6 +19,6 @@ fi
 
 echo "****COMPILING CIRCUIT****"
 start=`date +%s`
-circom "$CIRCUIT_PATH"/"$CIRCUIT_NAME".circom --r1cs --wasm --sym --c --wat --output "$BUILD_DIR"
+circom "$CIRCUIT_PATH"/"$CIRCUIT_NAME".circom --r1cs --wasm --sym --wat --output "$BUILD_DIR"
 end=`date +%s`
 echo "DONE ($((end-start))s)"

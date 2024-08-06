@@ -34,10 +34,10 @@ async function genProofInput(requestBody) {
     await eddsa.init();
 
     // 从请求体中提取数据
-    const { requests, account, l, pubkey, signatures } = requestBody;
+    const { requests, l, pubkey, signatures } = requestBody;
 
     // 验证必要的字段
-    if (!requests || !account || !l || !pubkey || !signatures) {
+    if (!requests || !l || !pubkey || !signatures) {
         throw new Error('Missing required fields in request body');
     }
 
@@ -53,15 +53,8 @@ async function genProofInput(requestBody) {
         req.userAddress,
         req.providerAddress
     ));
-
-    const accountInstance = new Account(
-        account.balance,
-        account.nonce,
-        account.userAddress,
-        account.providerAddress
-    );
     
-    return helper.generateProofInput(requestInstances, accountInstance, l, pubkey, signatures);
+    return helper.generateProofInput(requestInstances, l, pubkey, signatures);
 }
 
 async function genKeyPair(requestBody) {

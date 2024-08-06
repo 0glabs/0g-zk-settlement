@@ -22,14 +22,7 @@ template BalanceCheck(traceLen) {
     costAccumulator.inputCount <== inputCount;
     costAccumulator.outputCount <== outputCount;
     costAccumulator.createdAt <== createdAt;
-
-    signal input initBalance;
-    // costAccumulator must less eq than initBalance
-    component let = LessEqThan(balanceBytesWidth*8);
-    let.in[0] <== costAccumulator.totalCost;
-    let.in[1] <== initBalance;
-    let.out === 1;
     
-    signal output finalBalance;
-    finalBalance <== initBalance - costAccumulator.totalCost;
+    signal output totalCost;
+    totalCost <== costAccumulator.totalCost;
 }

@@ -1,8 +1,11 @@
+pragma circom 2.0.0;
+
 include "../node_modules/circomlib/circuits/comparators.circom";
 include "./settlement_eddsa/commit_account.circom";
 include "./settlement_eddsa/check_balance.circom";
 include "./settlement_eddsa/check_nonce.circom";
 include "./settlement_eddsa/verify_signature.circom";
+include "./utils/bytes_to_num.circom";
 
 // l: trace length
 template SettleTrace(l) {
@@ -31,34 +34,35 @@ template SettleTrace(l) {
     sigVerifier.r8 <== r8;
     sigVerifier.s <== s;
     sigVerifier.pubkey <== signer;
-
-    // account content
-    // every settlment just process one account
-    signal input serializedAccount[accountBytesWidth];
-    component accountCommit = AccountCommit();
-    accountCommit.serializedAccount <== serializedAccount;
-    signal output old_commitment[2];
-    old_commitment <== accountCommit.accountCommitment;
-
-    // check signers for request in signer in account are mathched
+    component packSigner1 = Bytes2Num(16);
+    component packSigner2 = Bytes2Num(16);
+    for (i=0; i<16; i++) {
+        packSigner1.in[i] <== signer[i];
+        packSigner2.in[i] <== signer[16+i];
+    }
+    signal output packedSigner[2];
+    packedSigner[0] <== packSigner1.out;
+    packedSigner[1] <== packSigner2.out;
+    signal output userAddress;
+    signal output providerAddress;
+    userAddress <== sigVerifier.userAddress[0];
+    providerAddress <== sigVerifier.providerAddress[0];
 
     // check nonce is valid
     component checkNonce = NonceCheck(l);
     checkNonce.nonce <== sigVerifier.nonce;
-    checkNonce.initNonce <== accountCommit.nonce;
-    signal output nonce;
-    nonce <== checkNonce.finalNonce;
+    signal output initNonce;
+    signal output finalNonce;
+    initNonce <== checkNonce.initNonce;
+    finalNonce <== checkNonce.finalNonce;
 
     // check balance trace is valid
     component checkBalance = BalanceCheck(l);
-    checkBalance.initBalance <== accountCommit.balance;
     checkBalance.inputCount <== sigVerifier.inputCount;
     checkBalance.outputCount <== sigVerifier.outputCount;
     checkBalance.updatedAt <== sigVerifier.updatedAt;
     checkBalance.createdAt <== sigVerifier.createdAt;
     checkBalance.price <== sigVerifier.price;
-    signal output balance;
-    balance <== checkBalance.finalBalance;
+    signal output totalCost;
+    totalCost <== checkBalance.totalCost;
 }
-
-component main = SettleTrace(40);

@@ -127,4 +127,10 @@ template SignatureVerify(traceLen) {
         userAddress[i] <== packUserAddress[i].out;
         providerAddress[i] <== packProviderAddress[i].out;
     }
+
+    for (i=1; i<traceLen; i++) {
+        serviceName[i] === serviceName[0];
+        userAddress[i] === userAddress[0];
+        providerAddress[i] === providerAddress[0];
+    }
 }

@@ -9,25 +9,22 @@ template NonceCheck(traceLen) {
     var nonceBytesWidth = 4; // unit32:[u8;4]
 
     signal input nonce[traceLen]; 
-    signal input initNonce;
 
-    component sumFlag = BinSum(1, traceLen);
-    component LT[traceLen];
-    LT[0] = LessThan(nonceBytesWidth);
-    LT[0].in[0] <== initNonce;
-    LT[0].in[1] <== nonce[0];
-    sumFlag.in[0][0] <== LT[0].out;
-    for (i=1; i<traceLen; i++) {
+    component sumFlag = BinSum(1, traceLen-1);
+    component LT[traceLen - 1];
+    for (i=0; i<traceLen-1; i++) {
         LT[i] = LessThan(nonceBytesWidth);
-        LT[i].in[0] <== nonce[i-1];
-        LT[i].in[1] <== nonce[i];
+        LT[i].in[0] <== nonce[i];
+        LT[i].in[1] <== nonce[i+1];
         sumFlag.in[i][0] <== LT[i].out;
     }
-    var sumFlagOutBits = nbits((2**1 -1)*traceLen);
+    var sumFlagOutBits = nbits((2**1 -1)*(traceLen-1));
     component packFlag = Bits2Num(sumFlagOutBits);
     packFlag.in <== sumFlag.out;
-    packFlag.out === traceLen;
+    packFlag.out === traceLen - 1;
 
+    signal output initNonce;
     signal output finalNonce;
+    initNonce <== nonce[0];
     finalNonce <== nonce[traceLen-1];
 }

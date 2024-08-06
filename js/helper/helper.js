@@ -3,7 +3,7 @@ const utils = require('./utils');
 const { Request } = require('./request');
 const { Account } = require('./account');
 
-async function generateProofInput(requests, account, l, pubvkey, signBuff) {
+async function generateProofInput(requests, l, pubvkey, signBuff) {
     await eddsa.init();
     const signer = eddsa.packPoint(pubvkey);
 
@@ -16,14 +16,11 @@ async function generateProofInput(requests, account, l, pubvkey, signBuff) {
 
     const paddingResult = await paddingSignature(requests, r8, s, l);
 
-    const serializedAccount = account._serialize();
-
     const input = {
         serializedRequest: paddingResult.serializedRequestTrace,
         signer: signer,
         r8: paddingResult.r8,
-        s: paddingResult.s,
-        serializedAccount: serializedAccount
+        s: paddingResult.s
     };
 
     return input;

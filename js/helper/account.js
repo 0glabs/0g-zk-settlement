@@ -16,7 +16,6 @@ class Account {
         // 确保地址字符串带有 "0x" 前缀并转换为 BigInt
         this.userAddress = BigInt(this._ensureHexString(userAddress));
         this.providerAddress = BigInt(this._ensureHexString(providerAddress));
-
         // this.calculatePedersenHash();
     }
 
