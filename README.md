@@ -36,13 +36,13 @@ yarn setup
 yarn start
 ```
 
-# Rust backend
+## Rust backend
 We also provide a more efficient implementation for costy generating proof and calldata operations using Rust language. 
-## build
+### build
 ```shell
 cargo build --release
 ```
-## run 
+### run 
 ```shell
 RUST_LOG=info ./target/release/zk-settlement
 ```
