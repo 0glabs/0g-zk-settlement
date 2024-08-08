@@ -40,6 +40,10 @@ function packPoint(point) {
     return babyjubjub.packPoint(point);
 }
 
+function unpackPoint(point) {
+    return babyjubjub.unpackPoint(point);
+}
+
 function hash(msg) {
     return pedersenHash.hash(msg);
 }
@@ -57,5 +61,6 @@ module.exports = {
     packSignature,
     packPoint,
     hash,
-    unpackSignature
+    unpackSignature,
+    unpackPoint
 };

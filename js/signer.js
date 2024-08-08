@@ -1,8 +1,7 @@
 const { Request } = require('./helper/request');
-const { Account } = require('./helper/account');
 const eddsa = require('./helper/eddsa');
-const utils = require('./helper/utils');
 const helper = require('./helper/helper');
+const utils = require('./helper/utils');
 
 async function sign(requestBody) {
     await eddsa.init();
@@ -19,15 +18,18 @@ async function sign(requestBody) {
         data.nonce,
         data.inputCount,
         data.outputCount,
-        data.price.toString(),
-        data.updatedAt,
-        data.createdAt,
+        data.inputPrice.toString(),
+        data.outputPrice.toString(),
         data.serviceName.toString(),
         data.userAddress.toString(),
         data.providerAddress.toString()
     ));
+    
+    const unpackedPrivkey = new Uint8Array(32);
+    unpackedPrivkey.set(utils.bigintToBytes(BigInt(privkey[0]), 16), 0);
+    unpackedPrivkey.set(utils.bigintToBytes(BigInt(privkey[1]), 16), 16);
 
-    return helper.signRequests(requestInstances, privkey);
+    return helper.signRequests(requestInstances, unpackedPrivkey);
 }
 
 async function genProofInput(requestBody) {
@@ -46,9 +48,8 @@ async function genProofInput(requestBody) {
         req.nonce,
         req.inputCount,
         req.outputCount,
-        req.price,
-        req.updatedAt,
-        req.createdAt,
+        req.inputPrice,
+        req.outputPrice,
         req.serviceName,
         req.userAddress,
         req.providerAddress
@@ -63,7 +64,12 @@ async function genKeyPair(requestBody) {
     const privkey = eddsa.babyJubJubGeneratePrivateKey();
     const pubkey = eddsa.babyJubJubGeneratePublicKey(privkey);
 
-    return {privkey, pubkey};
+    const packedPubkey = eddsa.packPoint(pubkey);
+    const packedPubkey0 = utils.bytesToBigint(packedPubkey.slice(0, 16));
+    const packedPubkey1 = utils.bytesToBigint(packedPubkey.slice(16));
+    const packPrivkey0 = utils.bytesToBigint(privkey.slice(0, 16));
+    const packPrivkey1 = utils.bytesToBigint(privkey.slice(16));
+    return {packPrivkey0, packPrivkey1, packedPubkey0, packedPubkey1};
 }
 
 async function verifySig(requestBody) {
@@ -80,9 +86,8 @@ async function verifySig(requestBody) {
         req.nonce,
         req.inputCount,
         req.outputCount,
-        req.price,
-        req.updatedAt,
-        req.createdAt,
+        req.inputPrice,
+        req.outputPrice,
         req.serviceName,
         req.userAddress,
         req.providerAddress

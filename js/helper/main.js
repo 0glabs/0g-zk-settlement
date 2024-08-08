@@ -16,9 +16,9 @@ async function main() {
     const providerAddress = '0x1234567890123456789012345678901234567890';
 
     const requests = [
-        new Request(1, 1, 0, '10', '2024-01-01T00:00:00Z', '2024-01-02T00:00:00Z', serviceName, userAddress, providerAddress),
-        new Request(2, 1, 2, '10', '2024-01-01T00:00:00Z', '2024-01-02T00:00:01Z', serviceName, userAddress, providerAddress),
-        new Request(3, 0, 1, '10', '2024-01-01T00:00:00Z', '2024-01-02T00:00:02Z', serviceName, userAddress, providerAddress)
+        new Request(1, 1, 0, '10', '5', serviceName, userAddress, providerAddress),
+        new Request(2, 1, 2, '10', '6', serviceName, userAddress, providerAddress),
+        new Request(3, 0, 1, '10', '7', serviceName, userAddress, providerAddress)
     ];
 
     const signatures = await helper.signRequests(requests, privkey);
@@ -26,9 +26,7 @@ async function main() {
     const isValid = await helper.verifySig(requests, signatures, pubkey)
     console.log("isValid:", isValid);
 
-    const account = new Account(0, 100, userAddress, providerAddress);
-
-    const input = await helper.generateProofInput(requests, account, 4, pubkey, signatures);
+    const input = await helper.generateProofInput(requests, 4, pubkey, signatures);
 
     console.log("Proof input:", utils.jsonifyData(input, true));
     utils.writeJsonToFile(input, "../build_eddsa/input.json");

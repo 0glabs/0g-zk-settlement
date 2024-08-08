@@ -1,0 +1,18 @@
+{
+    "requests": [
+        {
+            "nonce": 1,
+            "inputCount": 1,
+            "outputCount": 0,
+            "inputPrice": "10",
+            "outputPrice": "5",
+            "serviceName": "0x1234567890abcdef1234567890abcdef",
+            "userAddress": "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
+            "providerAddress": "0x1234567890123456789012345678901234567890"
+        }
+    ],
+    "privkey": [
+        "0xf34538ef336c86f570c11c851fd84c00",
+        "0x2a2e67b3d6c78591cfb2a94eaa150876"
+    ]
+}

@@ -3,10 +3,12 @@ const utils = require('./utils');
 const { Request } = require('./request');
 const { Account } = require('./account');
 
-async function generateProofInput(requests, l, pubvkey, signBuff) {
+async function generateProofInput(requests, l, pubkey, signBuff) {
     await eddsa.init();
-    const signer = eddsa.packPoint(pubvkey);
-
+    const signer = new Uint8Array(32);
+    signer.set(utils.bigintToBytes(BigInt(pubkey[0]), 16), 0);
+    signer.set(utils.bigintToBytes(BigInt(pubkey[1]), 16), 16);
+    
     const r8 = [];
     const s = [];
     for (let i = 0; i < signBuff.length; i++) {
@@ -62,8 +64,13 @@ async function signRequests(requests, babyJubJubPrivateKey) {
     return signatures;
 }
 
-async function verifySig(requests, signatures, babyJubJubPublicKey) {
+async function verifySig(requests, signatures, pubkey) {
     await eddsa.init();
+
+    const unpackPubkey = new Uint8Array(32);
+    unpackPubkey.set(utils.bigintToBytes(BigInt(pubkey[0]), 16), 0);
+    unpackPubkey.set(utils.bigintToBytes(BigInt(pubkey[1]), 16), 16);
+    const babyJubJubPublicKey = eddsa.unpackPoint(unpackPubkey);
 
     const isValid = [];
     const serializedRequestTrace = requests.map(request => request.serialize());
@@ -93,8 +100,7 @@ function paddingSignature(requests, r8, s, l) {
             0,
             0,
             0n,
-            '2000-01-01T00:00:00Z',
-            '2030-01-01T00:00:00Z',
+            0n,
             '0x' + lastRequest.serviceName.toString(16),
             '0x' + lastRequest.userAddress.toString(16),
             '0x' + lastRequest.providerAddress.toString(16)

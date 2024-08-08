@@ -13,10 +13,9 @@ template SignatureVerify(traceLen) {
     var serviceNameBytesWidth = 16; // string:[u8;32]
     var countBytesWidth = 4; // uint32:[u8;4]
     var nonceBytesWidth = 4; // unit32:[u8;4]
-    var dataBytesWidth = 8; // unit64:[u8;4]
     var addressBytesWidth = 20; // unit160:[u8; 20]
     var balanceBytesWidth = 8; // unit64:[u8; 8]
-    var totalBytesWidth = nonceBytesWidth + countBytesWidth * 2 + dataBytesWidth * 2 + balanceBytesWidth + serviceNameBytesWidth + addressBytesWidth * 2;
+    var totalBytesWidth = nonceBytesWidth + countBytesWidth * 2 + balanceBytesWidth * 2 + serviceNameBytesWidth + addressBytesWidth * 2;
 
     signal input pubkey[32];
     signal input r8[traceLen][32];
@@ -35,9 +34,8 @@ template SignatureVerify(traceLen) {
     component packNonce[traceLen];
     component packInputCount[traceLen];
     component packOutputCount[traceLen];
-    component packPrice[traceLen];
-    component packUpdatedAt[traceLen];
-    component packCreatedAt[traceLen];
+    component packInputPrice[traceLen];
+    component packOutputPrice[traceLen];
     component packServiceName[traceLen];
     component packUserAddress[traceLen];
     component packProviderAddress[traceLen];
@@ -45,9 +43,8 @@ template SignatureVerify(traceLen) {
         packNonce[i] = Bytes2Num(nonceBytesWidth);
         packInputCount[i] = Bytes2Num(countBytesWidth);
         packOutputCount[i] = Bytes2Num(countBytesWidth);
-        packPrice[i] = Bytes2Num(balanceBytesWidth);
-        packUpdatedAt[i] = Bytes2Num(dataBytesWidth);
-        packCreatedAt[i] = Bytes2Num(dataBytesWidth);
+        packInputPrice[i] = Bytes2Num(balanceBytesWidth);
+        packOutputPrice[i] = Bytes2Num(balanceBytesWidth);
         packServiceName[i] = Bytes2Num(serviceNameBytesWidth);
         packUserAddress[i] = Bytes2Num(addressBytesWidth);
         packProviderAddress[i] = Bytes2Num(addressBytesWidth);
@@ -61,22 +58,19 @@ template SignatureVerify(traceLen) {
             packOutputCount[i].in[j] <== serializedRequest[i][nonceBytesWidth + countBytesWidth + j];
         }
         for (j=0; j<balanceBytesWidth; j++) {
-            packPrice[i].in[j] <== serializedRequest[i][nonceBytesWidth + countBytesWidth*2 + j];
+            packInputPrice[i].in[j] <== serializedRequest[i][nonceBytesWidth + countBytesWidth*2 + j];
         }
-        for (j=0; j<dataBytesWidth; j++) {
-            packUpdatedAt[i].in[j] <== serializedRequest[i][nonceBytesWidth + countBytesWidth*2 + balanceBytesWidth + j];
-        }
-        for (j=0; j<dataBytesWidth; j++) {
-            packCreatedAt[i].in[j] <== serializedRequest[i][nonceBytesWidth + countBytesWidth*2 + balanceBytesWidth + dataBytesWidth + j];
+        for (j=0; j<balanceBytesWidth; j++) {
+            packOutputPrice[i].in[j] <== serializedRequest[i][nonceBytesWidth + countBytesWidth*2 + balanceBytesWidth + j];
         }
         for (j=0; j<serviceNameBytesWidth; j++) {
-            packServiceName[i].in[j] <== serializedRequest[i][nonceBytesWidth + countBytesWidth*2 + balanceBytesWidth + dataBytesWidth*2 + j];
+            packServiceName[i].in[j] <== serializedRequest[i][nonceBytesWidth + countBytesWidth*2 + balanceBytesWidth*2 + j];
         }
         for (j=0; j<addressBytesWidth; j++) {
-            packUserAddress[i].in[j] <== serializedRequest[i][nonceBytesWidth + countBytesWidth*2 + balanceBytesWidth + dataBytesWidth*2 + serviceNameBytesWidth + j];
+            packUserAddress[i].in[j] <== serializedRequest[i][nonceBytesWidth + countBytesWidth*2 + balanceBytesWidth*2 + serviceNameBytesWidth + j];
         }
         for (j=0; j<addressBytesWidth; j++) {
-            packProviderAddress[i].in[j] <== serializedRequest[i][nonceBytesWidth + countBytesWidth*2 + balanceBytesWidth + dataBytesWidth*2 + serviceNameBytesWidth + addressBytesWidth + j];
+            packProviderAddress[i].in[j] <== serializedRequest[i][nonceBytesWidth + countBytesWidth*2 + balanceBytesWidth*2 + serviceNameBytesWidth + addressBytesWidth + j];
         }
     }
     
@@ -110,9 +104,8 @@ template SignatureVerify(traceLen) {
     signal output nonce[traceLen];
     signal output inputCount[traceLen];
     signal output outputCount[traceLen];
-    signal output price[traceLen];
-    signal output updatedAt[traceLen];
-    signal output createdAt[traceLen];
+    signal output inputPrice[traceLen];
+    signal output outputPrice[traceLen];
     signal output serviceName[traceLen];
     signal output userAddress[traceLen];
     signal output providerAddress[traceLen];
@@ -120,9 +113,8 @@ template SignatureVerify(traceLen) {
         nonce[i] <== packNonce[i].out;
         inputCount[i] <== packInputCount[i].out;
         outputCount[i] <== packOutputCount[i].out;
-        price[i] <== packPrice[i].out;
-        updatedAt[i] <== packUpdatedAt[i].out;
-        createdAt[i] <== packCreatedAt[i].out;
+        inputPrice[i] <== packInputPrice[i].out;
+        outputPrice[i] <== packOutputPrice[i].out;
         serviceName[i] <== packServiceName[i].out;
         userAddress[i] <== packUserAddress[i].out;
         providerAddress[i] <== packProviderAddress[i].out;

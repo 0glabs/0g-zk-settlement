@@ -21,43 +21,35 @@ node-v20.15.1
 
 Note: The above version is the version that has passed the verification, and is not the only or minimum version.
 # Quick
-## Compile circuit
+## JS backend
+### Compile circuit
 ```shell
 yarn compile
 ```
-## Trust setup
+### Trust setup
 ```shell
 yarn setup
 ```
 
-## Start service
+### Start service
 ```shell
 yarn start
 ```
 
-## Access with web
-Open your web browser (such as Chrome, Firefox, etc.). Enter in the address bar: http://[server IP address]:3000 (for example: http://127.0.0.1:3000). You should see the zkSettlment prover agent web interface.
-![image.png](./doc/images/interface.png)
+# Rust backend
+We also provide a more efficient implementation for costy generating proof and calldata operations using Rust language. 
+## build
+```shell
+cargo build --release
+```
+## run 
+```shell
+RUST_LOG=info ./target/release/zk-settlement
+```
 
-The web interface provides the following functionalities:
-### Get Verification Key
-
-1. Click the "Get Verification Key" button.
-2. The agent will display the verification key.
-### Generate Proof
-
-1. Enter the required input data (in JSON format) in the text box.
-2. Click the "Generate Proof" button.
-3. The agent will generate the proof and display the result.
-### Get Verifier Contract
-
-1. Click the "Get Verifier Contract" button.
-2. The agent will generate and display the Solidity verifier contract code.
-
-### Get Solidity Calldata
-1. Enter the required input data (in JSON format) in the text box.
-2. Click the "Get Solidity Calldata" button.
-3. The agent will generate and display the Solidity Calldata.
+## Access with CLI
+You can use the zkSettlement prover agent's functionalities by CLI.
+For detailed CLI documentation, please refer to our [CLI Documentation](./doc/CLI.md).
 
 ## Access with CURL
 You can also use the zkSettlement prover agent's functionalities by directly calling the API.

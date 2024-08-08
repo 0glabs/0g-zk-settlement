@@ -1,9 +1,9 @@
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
+const http = require('http');
 const https = require('https');
 const fs = require('fs');
-const readline = require('readline');
 const {
     generateProof,
     getSolidityCalldata,
@@ -116,10 +116,10 @@ app.post('/proof-input', async (req, res) => {
 
 app.get('/sign-keypair', async (req, res) => {
     try {
-        const {privkey, pubkey} = await genKeyPair();
+        const {packPrivkey0, packPrivkey1, packedPubkey0, packedPubkey1} = await genKeyPair();
         const responseBody = {
-            privkey: privkey,
-            pubkey: pubkey,
+            privkey: ["0x" + packPrivkey0.toString(16), "0x" + packPrivkey1.toString(16)],
+            pubkey: ["0x" + packedPubkey0.toString(16), "0x" + packedPubkey1.toString(16)],
         };
         res.setHeader('Content-Type', 'application/json');
         res.send(utils.jsonifyData(responseBody));
@@ -157,31 +157,28 @@ function handleError(res, error) {
     });
 }
 
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-});
+const port = process.env.JS_PROVER_PORT || 3000;
+const useHttps = process.env.USE_HTTPS === 'true';
 
-rl.question('Enter the port number: ', (port) => {
-    rl.question('Use HTTPS? (y/n): ', (useHttps) => {
-        if (useHttps.toLowerCase() === 'y') {
-            rl.question('Enter path to SSL key: ', (keyPath) => {
-                rl.question('Enter path to SSL certificate: ', (certPath) => {
-                    const httpsOptions = {
-                        key: fs.readFileSync(keyPath),
-                        cert: fs.readFileSync(certPath)
-                    };
-                    https.createServer(httpsOptions, app).listen(port, '0.0.0.0', () => {
-                        console.log(`Zk-settlement agent running on https://0.0.0.0:${port}`);
-                    });
-                    rl.close();
-                });
-            });
-        } else {
-            app.listen(port, '0.0.0.0', () => {
-                console.log(`Zk-settlement agent running on http://0.0.0.0:${port}`);
-            });
-            rl.close();
-        }
+if (useHttps) {
+    const keyPath = process.env.SSL_KEY_PATH;
+    const certPath = process.env.SSL_CERT_PATH;
+
+    if (!keyPath || !certPath) {
+        console.error('SSL key and certificate paths must be provided when using HTTPS.');
+        process.exit(1);
+    }
+
+    const httpsOptions = {
+        key: fs.readFileSync(keyPath),
+        cert: fs.readFileSync(certPath)
+    };
+
+    https.createServer(httpsOptions, app).listen(port, '0.0.0.0', () => {
+        console.log(`Zk-settlement agent running on https://0.0.0.0:${port}`);
     });
-});
+} else {
+    http.createServer(app).listen(port, '0.0.0.0', () => {
+        console.log(`Zk-settlement agent running on http://0.0.0.0:${port}`);
+    });
+}

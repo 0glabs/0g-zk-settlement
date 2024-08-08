@@ -15,11 +15,9 @@ template SettleTrace(l) {
     var serviceNameBytesWidth = 16; // string:[u8;32]
     var countBytesWidth = 4; // uint32:[u8;4]
     var nonceBytesWidth = 4; // unit32:[u8;4]
-    var dataBytesWidth = 8; // unit64:[u8;4]
     var addressBytesWidth = 20; // unit160:[u8; 20]
     var balanceBytesWidth = 8; // unit64:[u8; 8]
-    var requestBytesWidth = nonceBytesWidth + countBytesWidth * 2 + dataBytesWidth * 2 + balanceBytesWidth + serviceNameBytesWidth + addressBytesWidth * 2;
-    var accountBytesWidth = nonceBytesWidth + balanceBytesWidth + addressBytesWidth*2;
+    var requestBytesWidth = nonceBytesWidth + countBytesWidth * 2 + balanceBytesWidth * 2 + serviceNameBytesWidth + addressBytesWidth * 2;
 
     // request content
     // every settlment just process one account, so the signer should be same
@@ -60,9 +58,8 @@ template SettleTrace(l) {
     component checkBalance = BalanceCheck(l);
     checkBalance.inputCount <== sigVerifier.inputCount;
     checkBalance.outputCount <== sigVerifier.outputCount;
-    checkBalance.updatedAt <== sigVerifier.updatedAt;
-    checkBalance.createdAt <== sigVerifier.createdAt;
-    checkBalance.price <== sigVerifier.price;
+    checkBalance.inputPrice <== sigVerifier.inputPrice;
+    checkBalance.outputPrice <== sigVerifier.outputPrice;
     signal output totalCost;
     totalCost <== checkBalance.totalCost;
 }
