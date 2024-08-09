@@ -1,6 +1,3 @@
 {
-    "inputPrice": ["1", "2", "3"],
-    "inputCount": ["1", "2", "0"],
-    "outputPrice": ["1", "2", "3"],
-    "outputCount": ["0", "2", "1"]
+    "fee": ["1", "2", "3"]
 }

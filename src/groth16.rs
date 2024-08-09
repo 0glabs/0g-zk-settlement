@@ -156,14 +156,25 @@ fn parse_input(input: &Value) -> Result<HashMap<String, Vec<BigInt>>, Box<dyn st
 }
 
 
+fn parse_string_to_bigint(s: &str) -> BigInt {
+    if s.starts_with("0x") || s.starts_with("0X") {
+        // 16进制
+        BigInt::parse_bytes(&s[2..].as_bytes(), 16)
+    } else {
+        // 10进制
+        BigInt::from_str(s).ok()
+    }.unwrap_or_else(|| BigInt::from(0))
+}
+
 fn flatten_to_bigint(value: &Value) -> Vec<BigInt> {
     match value {
         Value::Array(arr) => arr.iter().flat_map(flatten_to_bigint).collect(),
-        Value::String(s) => vec![BigInt::from_str(s).unwrap_or_else(|_| BigInt::from(0))],
+        Value::String(s) => vec![parse_string_to_bigint(s)],
         Value::Number(n) => vec![BigInt::from(n.as_i64().unwrap_or(0))],
         _ => Vec::new(),
     }
 }
+
 
 pub fn calculate_wnts(
     circom: &CircomBuilder<Bn254>,
@@ -171,7 +182,7 @@ pub fn calculate_wnts(
 ) -> Result<(CircomCircuit<Bn254>, Vec<Fr>), String> {
     let mut circom = circom.clone();
     let inputs = parse_input(input).unwrap();
-    // println!("inputs: {:?}", inputs);
+    debug!("inputs: {:?}", inputs);
     circom.inputs = inputs;
 
     let circuit = circom

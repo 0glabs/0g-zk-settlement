@@ -1,24 +1,13 @@
 const utils = require('./utils');
 
-const NAME_LENGTH = 16;
-const COUNT_LENGTH = 4;
-const DATE_LENGTH = 8;
 const ADDR_LENGTH = 20;
 const NONCE_LENGTH = 4;
-const PRICE_LENGTH = 8;  // u64 的长度为 8 字节
+const FEE_LENGTH = 8;  // u64 的长度为 8 字节
 
 class Request {
-    constructor(nonce, inputCount, outputCount, inputPrice, outputPrice, serviceName, userAddress, providerAddress) {
-        // 初始化其他字段
-        this.inputCount = parseInt(inputCount, 10);
-        this.outputCount = parseInt(outputCount, 10);
-        this.nonce = parseInt(nonce, 10);
-        // price 为 u64
-        this.inputPrice = BigInt(inputPrice);
-        this.outputPrice = BigInt(outputPrice);
-
-        // serviceName 为 u128 以 hexstring 形式输入
-        this.serviceName = BigInt(serviceName);
+    constructor(nonce, fee, userAddress, providerAddress) {
+        this.nonce = parseInt(nonce);
+        this.fee = BigInt(fee, 10);
 
         // userAddress 和 providerAddress 为 u160 以 hexstring 形式输入
         this.userAddress = BigInt(userAddress);
@@ -27,7 +16,7 @@ class Request {
 
     // 序列化方法，按字段顺序序列化
     serialize() {
-        const buffer = new ArrayBuffer(NONCE_LENGTH + COUNT_LENGTH * 2 + NAME_LENGTH + ADDR_LENGTH * 2 + PRICE_LENGTH * 2);
+        const buffer = new ArrayBuffer(NONCE_LENGTH + ADDR_LENGTH * 2 + FEE_LENGTH);
         const view = new DataView(buffer);
         let offset = 0;
 
@@ -35,26 +24,10 @@ class Request {
         view.setUint32(offset, this.nonce, true);
         offset += NONCE_LENGTH;
 
-        // 写入 inputCount (u32)
-        view.setUint32(offset, this.inputCount, true);
-        offset += COUNT_LENGTH;
-
-        // 写入 outputCount (u32)
-        view.setUint32(offset, this.outputCount, true);
-        offset += COUNT_LENGTH;
-
-        // 写入 price (u64)
-        const inputPriceBytes = utils.bigintToBytes(this.inputPrice, PRICE_LENGTH);
-        new Uint8Array(buffer, offset, PRICE_LENGTH).set(inputPriceBytes);
-        offset += PRICE_LENGTH;
-        const outputPriceBytes = utils.bigintToBytes(this.outputPrice, PRICE_LENGTH);
-        new Uint8Array(buffer, offset, PRICE_LENGTH).set(outputPriceBytes);
-        offset += PRICE_LENGTH;
-
-        // 写入 serviceName (u128)
-        const serviceNameBytes = utils.bigintToBytes(this.serviceName, NAME_LENGTH);
-        new Uint8Array(buffer, offset, NAME_LENGTH).set(serviceNameBytes);
-        offset += NAME_LENGTH;
+        // 写入 fee (u64)
+        const feeBytes = utils.bigintToBytes(this.fee, FEE_LENGTH);
+        new Uint8Array(buffer, offset, FEE_LENGTH).set(feeBytes);
+        offset += FEE_LENGTH;
 
         // 写入 userAddress (u160)
         const userAddressBytes = utils.bigintToBytes(this.userAddress, ADDR_LENGTH);
@@ -71,7 +44,7 @@ class Request {
 
     // 反序列化方法
     static deserialize(byteArray) {
-        const expectedLength = NONCE_LENGTH + COUNT_LENGTH * 2 + NAME_LENGTH + ADDR_LENGTH * 2 + PRICE_LENGTH * 2;
+        const expectedLength = NONCE_LENGTH + ADDR_LENGTH * 2 + FEE_LENGTH;
 
         if (byteArray.length !== expectedLength) {
             throw new Error(`Invalid byte array length for deserialization. Expected: ${expectedLength}, but got: ${byteArray.length}`);
@@ -84,23 +57,9 @@ class Request {
         const nonce = view.getUint32(offset, true);
         offset += NONCE_LENGTH;
 
-        // 读取 inputCount (u32)
-        const inputCount = view.getUint32(offset, true);
-        offset += COUNT_LENGTH;
-
-        // 读取 outputCount (u32)
-        const outputCount = view.getUint32(offset, true);
-        offset += COUNT_LENGTH;
-
-        // 读取 price (u64)
-        const inputPrice = utils.bytesToBigint(new Uint8Array(byteArray.slice(offset, offset + PRICE_LENGTH)));
-        offset += PRICE_LENGTH;
-        const outputPrice = utils.bytesToBigint(new Uint8Array(byteArray.slice(offset, offset + PRICE_LENGTH)));
-        offset += PRICE_LENGTH;
-
-        // 读取 serviceName (u128)
-        const serviceName = utils.bytesToBigint(new Uint8Array(byteArray.slice(offset, offset + NAME_LENGTH)));
-        offset += NAME_LENGTH;
+        // 读取 fee (u64)
+        const fee = utils.bytesToBigint(new Uint8Array(byteArray.slice(offset, offset + FEE_LENGTH)));
+        offset += FEE_LENGTH;
 
         // 读取 userAddress (u160)
         const userAddress = utils.bytesToBigint(new Uint8Array(byteArray.slice(offset, offset + ADDR_LENGTH)));
@@ -112,11 +71,7 @@ class Request {
         
         return new Request(
             nonce,
-            inputCount,
-            outputCount,
-            inputPrice.toString(),
-            outputPrice.toString(),
-            '0x' + serviceName.toString(16),
+            fee.toString(),
             '0x' + userAddress.toString(16),
             '0x' + providerAddress.toString(16)
         );

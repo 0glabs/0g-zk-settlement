@@ -16,11 +16,7 @@ async function sign(requestBody) {
 
     const requestInstances = requests.map(data => new Request(
         data.nonce,
-        data.inputCount,
-        data.outputCount,
-        data.inputPrice.toString(),
-        data.outputPrice.toString(),
-        data.serviceName.toString(),
+        data.fee,
         data.userAddress.toString(),
         data.providerAddress.toString()
     ));
@@ -46,11 +42,7 @@ async function genProofInput(requestBody) {
     // 将JSON对象转换为Request实例
     const requestInstances = requests.map(req => new Request(
         req.nonce,
-        req.inputCount,
-        req.outputCount,
-        req.inputPrice,
-        req.outputPrice,
-        req.serviceName,
+        req.fee,
         req.userAddress,
         req.providerAddress
     ));
@@ -84,11 +76,7 @@ async function verifySig(requestBody) {
     
     const requestInstances = requests.map(req => new Request(
         req.nonce,
-        req.inputCount,
-        req.outputCount,
-        req.inputPrice,
-        req.outputPrice,
-        req.serviceName,
+        req.fee,
         req.userAddress,
         req.providerAddress
     ));

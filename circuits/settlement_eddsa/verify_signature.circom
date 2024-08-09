@@ -10,14 +10,12 @@ include "../eddsa/eddsa_verify.circom";
 template SignatureVerify(traceLen) {
     var i;
     var j;
-    var serviceNameBytesWidth = 16; // string:[u8;32]
-    var countBytesWidth = 4; // uint32:[u8;4]
     var nonceBytesWidth = 4; // unit32:[u8;4]
     var addressBytesWidth = 20; // unit160:[u8; 20]
     var balanceBytesWidth = 8; // unit64:[u8; 8]
-    var totalBytesWidth = nonceBytesWidth + countBytesWidth * 2 + balanceBytesWidth * 2 + serviceNameBytesWidth + addressBytesWidth * 2;
+    var totalBytesWidth = nonceBytesWidth + balanceBytesWidth + addressBytesWidth * 2;
 
-    signal input pubkey[32];
+    signal input signer[32];
     signal input r8[traceLen][32];
     signal input s[traceLen][32];
     signal input serializedRequest[traceLen][totalBytesWidth];
@@ -27,73 +25,45 @@ template SignatureVerify(traceLen) {
         verifier[i] = EdDSAVerify(totalBytesWidth);
         verifier[i].R8 <== r8[i];
         verifier[i].S <== s[i];
-        verifier[i].A <== pubkey;
+        verifier[i].A <== signer;
         verifier[i].msg <== serializedRequest[i];
     }
     
     component packNonce[traceLen];
-    component packInputCount[traceLen];
-    component packOutputCount[traceLen];
-    component packInputPrice[traceLen];
-    component packOutputPrice[traceLen];
-    component packServiceName[traceLen];
+    component packFee[traceLen];
     component packUserAddress[traceLen];
     component packProviderAddress[traceLen];
     for (i=0; i<traceLen; i++) {
         packNonce[i] = Bytes2Num(nonceBytesWidth);
-        packInputCount[i] = Bytes2Num(countBytesWidth);
-        packOutputCount[i] = Bytes2Num(countBytesWidth);
-        packInputPrice[i] = Bytes2Num(balanceBytesWidth);
-        packOutputPrice[i] = Bytes2Num(balanceBytesWidth);
-        packServiceName[i] = Bytes2Num(serviceNameBytesWidth);
+        packFee[i] = Bytes2Num(balanceBytesWidth);
         packUserAddress[i] = Bytes2Num(addressBytesWidth);
         packProviderAddress[i] = Bytes2Num(addressBytesWidth);
         for (j=0; j<nonceBytesWidth; j++) {
             packNonce[i].in[j] <== serializedRequest[i][j];
         }
-        for (j=0; j<countBytesWidth; j++) {
-            packInputCount[i].in[j] <== serializedRequest[i][nonceBytesWidth + j];
-        }
-        for (j=0; j<countBytesWidth; j++) {
-            packOutputCount[i].in[j] <== serializedRequest[i][nonceBytesWidth + countBytesWidth + j];
-        }
         for (j=0; j<balanceBytesWidth; j++) {
-            packInputPrice[i].in[j] <== serializedRequest[i][nonceBytesWidth + countBytesWidth*2 + j];
-        }
-        for (j=0; j<balanceBytesWidth; j++) {
-            packOutputPrice[i].in[j] <== serializedRequest[i][nonceBytesWidth + countBytesWidth*2 + balanceBytesWidth + j];
-        }
-        for (j=0; j<serviceNameBytesWidth; j++) {
-            packServiceName[i].in[j] <== serializedRequest[i][nonceBytesWidth + countBytesWidth*2 + balanceBytesWidth*2 + j];
+            packFee[i].in[j] <== serializedRequest[i][nonceBytesWidth + j];
         }
         for (j=0; j<addressBytesWidth; j++) {
-            packUserAddress[i].in[j] <== serializedRequest[i][nonceBytesWidth + countBytesWidth*2 + balanceBytesWidth*2 + serviceNameBytesWidth + j];
+            packUserAddress[i].in[j] <== serializedRequest[i][nonceBytesWidth + balanceBytesWidth + j];
         }
         for (j=0; j<addressBytesWidth; j++) {
-            packProviderAddress[i].in[j] <== serializedRequest[i][nonceBytesWidth + countBytesWidth*2 + balanceBytesWidth*2 + serviceNameBytesWidth + addressBytesWidth + j];
+            packProviderAddress[i].in[j] <== serializedRequest[i][nonceBytesWidth + balanceBytesWidth + addressBytesWidth + j];
         }
     }
     
-    component inputIsZero[traceLen];
-    component outputIsZero[traceLen];
-    component countAllZero[traceLen];
-    component sigValidOrCountAllZero[traceLen];
+    component feeIsZero[traceLen];
+    component sigValidOrFeeAllZero[traceLen];
     component sumFlag = BinSum(1, traceLen);
     for (i=0; i<traceLen; i++) {
-        inputIsZero[i] = IsZero();
-        outputIsZero[i] = IsZero();
-        inputIsZero[i].in <== packInputCount[i].out;
-        outputIsZero[i].in <== packOutputCount[i].out;
-
-        countAllZero[i] = AND();
-        countAllZero[i].a <== inputIsZero[i].out;
-        countAllZero[i].b <== outputIsZero[i].out;
+        feeIsZero[i] = IsZero();
+        feeIsZero[i].in <== packFee[i].out;
         
-        sigValidOrCountAllZero[i] = OR();
-        sigValidOrCountAllZero[i].a <== verifier[i].result;
-        sigValidOrCountAllZero[i].b <== countAllZero[i].out;
+        sigValidOrFeeAllZero[i] = OR();
+        sigValidOrFeeAllZero[i].a <== verifier[i].result;
+        sigValidOrFeeAllZero[i].b <== feeIsZero[i].out;
         
-        sumFlag.in[i][0] <== sigValidOrCountAllZero[i].out;
+        sumFlag.in[i][0] <== sigValidOrFeeAllZero[i].out;
     }
 
     var sumFlagOutBits = nbits((2**1 -1)*traceLen);
@@ -102,26 +72,17 @@ template SignatureVerify(traceLen) {
     packFlag.out === traceLen;
 
     signal output nonce[traceLen];
-    signal output inputCount[traceLen];
-    signal output outputCount[traceLen];
-    signal output inputPrice[traceLen];
-    signal output outputPrice[traceLen];
-    signal output serviceName[traceLen];
+    signal output fee[traceLen];
     signal output userAddress[traceLen];
     signal output providerAddress[traceLen];
     for (i=0; i<traceLen; i++) {
         nonce[i] <== packNonce[i].out;
-        inputCount[i] <== packInputCount[i].out;
-        outputCount[i] <== packOutputCount[i].out;
-        inputPrice[i] <== packInputPrice[i].out;
-        outputPrice[i] <== packOutputPrice[i].out;
-        serviceName[i] <== packServiceName[i].out;
+        fee[i] <== packFee[i].out;
         userAddress[i] <== packUserAddress[i].out;
         providerAddress[i] <== packProviderAddress[i].out;
     }
 
     for (i=1; i<traceLen; i++) {
-        serviceName[i] === serviceName[0];
         userAddress[i] === userAddress[0];
         providerAddress[i] === providerAddress[0];
     }

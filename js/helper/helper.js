@@ -1,13 +1,9 @@
 const eddsa = require('./eddsa');
 const utils = require('./utils');
 const { Request } = require('./request');
-const { Account } = require('./account');
 
 async function generateProofInput(requests, l, pubkey, signBuff) {
     await eddsa.init();
-    const signer = new Uint8Array(32);
-    signer.set(utils.bigintToBytes(BigInt(pubkey[0]), 16), 0);
-    signer.set(utils.bigintToBytes(BigInt(pubkey[1]), 16), 16);
     
     const r8 = [];
     const s = [];
@@ -20,7 +16,7 @@ async function generateProofInput(requests, l, pubkey, signBuff) {
 
     const input = {
         serializedRequest: paddingResult.serializedRequestTrace,
-        signer: signer,
+        signer: [pubkey[0].toString(16), pubkey[1].toString(16)],
         r8: paddingResult.r8,
         s: paddingResult.s
     };
@@ -97,11 +93,7 @@ function paddingSignature(requests, r8, s, l) {
         currentNonce += 1;
         const noopRequest = new Request(
             currentNonce,
-            0,
-            0,
             0n,
-            0n,
-            '0x' + lastRequest.serviceName.toString(16),
             '0x' + lastRequest.userAddress.toString(16),
             '0x' + lastRequest.providerAddress.toString(16)
         );

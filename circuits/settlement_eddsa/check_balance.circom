@@ -8,18 +8,12 @@ include "./accumulate_cost.circom";
 template BalanceCheck(traceLen) {
     var i;
     
-    signal input inputCount[traceLen];
-    signal input outputCount[traceLen];
-    signal input inputPrice[traceLen];
-    signal input outputPrice[traceLen];
+    signal input fee[traceLen];
 
     // calculate total cost
     component costAccumulator = CostAccumulate(traceLen);
-    costAccumulator.inputPrice <== inputPrice;
-    costAccumulator.outputPrice <== outputPrice;
-    costAccumulator.inputCount <== inputCount;
-    costAccumulator.outputCount <== outputCount;
+    costAccumulator.fee <== fee;
     
-    signal output totalCost;
-    totalCost <== costAccumulator.totalCost;
+    signal output totalFee;
+    totalFee <== costAccumulator.totalFee;
 }
