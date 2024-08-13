@@ -24,6 +24,7 @@ ethers-core = { version = "=2.0.7", default-features = false, optional = true }
 log = "0.4"
 env_logger = "0.9"
 hex = "0.4.3"
+regex = "1.7"
 
 [dependencies.impl-codec]
 version = "0.6.0"

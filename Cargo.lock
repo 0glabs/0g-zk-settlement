@@ -3909,6 +3909,7 @@ dependencies = [
  "impl-codec",
  "log",
  "num-bigint",
+ "regex",
  "serde",
  "serde_json",
  "thiserror",

@@ -13,7 +13,7 @@ use std::time::Instant;
 
 use crate::config;
 use crate::error::AppError;
-use crate::types::{ProofInput, ProofOutput};
+use regex::Regex;
 
 
 #[cfg(feature = "cuda")]
@@ -76,8 +76,8 @@ pub fn generate_valid_proof(
 
     let proof = ethereum::Proof::from(proof);
     let pub_inputs = ethereum::Inputs::from(pub_inputs.as_slice());
-    println!("proof: {:?}", proof.as_tuple());
-    println!("pub_inputs: {:?}", pub_inputs.0);
+    debug!("proof: {:?}", proof.as_tuple());
+    debug!("pub_inputs: {:?}", pub_inputs.0);
     
     let pi_a = g1_to_json(&proof.a);
     let pi_b = g2_to_json(&proof.b);
@@ -107,11 +107,17 @@ pub fn generate_valid_proof(
 pub fn generate_valid_calldata(
     state: &Arc<AppState>,
     input: &Value,
-) -> Result<String, AppError> {
+) -> Result<Value, AppError> {
+    let cal_wtns_start = Instant::now();
     let (circuit, pub_inputs) =
         calculate_wnts(&state.circom, input).map_err(|e| AppError::Groth16(e))?;
+    let cal_wtns_duration = cal_wtns_start.elapsed();
+    info!("Time to calculate witness: {:?}", cal_wtns_duration);
 
+    let gen_proof_start = Instant::now();
     let proof = prove(&state.zkey, circuit).map_err(|e| AppError::Groth16(e))?;
+    let gen_proof_duration = gen_proof_start.elapsed();
+    info!("Time to generate proof: {:?}", gen_proof_duration);
 
     let valid = verify(&state.pvk, &proof, &pub_inputs).map_err(|e| AppError::Groth16(e))?;
     assert!(valid);
@@ -121,7 +127,8 @@ pub fn generate_valid_calldata(
     debug!("proof: {:?}", proof);
     debug!("pub_inputs: {:?}", pub_inputs.0);
     
-    let response = groth16_export_solidity_call_data(&proof, &pub_inputs);
+    let calldata_str = groth16_export_solidity_call_data(&proof, &pub_inputs);
+    let response = parse_calldata_string(&calldata_str);
 
     Ok(response)
 }
@@ -255,4 +262,55 @@ pub fn groth16_export_solidity_call_data(proof: &ethereum::Proof, public_inputs:
         pi_c1 = format!("\"0x{:064x}\"", proof.2.1),
         inputs = inputs
     )
+}
+
+fn parse_calldata_string(calldata_str: &str) -> serde_json::Value {
+    debug!("Input string: {}", calldata_str);
+
+    let re = Regex::new(r#"\[((?:[^\[\]]+|\[[^\[\]]*\])*)\]"#).unwrap();
+    let matches: Vec<String> = re.captures_iter(calldata_str)
+        .map(|cap| cap[1].to_string())
+        .collect();
+
+    if matches.len() < 4 {
+        panic!("Expected at least 4 parts, but found {}", matches.len());
+    }
+
+    let parse_array = |s: &str| -> Vec<String> {
+        s.split(',')
+            .map(|s| s.trim_matches(|c| c == '"' || c == ' '))
+            .map(|s| s.to_string())
+            .collect()
+    };
+
+    let parse_pb = |s: &str| -> Vec<Vec<String>> {
+        let s = s.replace("\\\"", "\"");
+        let inner_re = Regex::new(r#"\[([^\]]+)\]"#).unwrap();
+        let inner_arrays: Vec<Vec<String>> = inner_re.captures_iter(&s)
+            .map(|cap| parse_array(&cap[1]))
+            .collect();
+        
+        if inner_arrays.is_empty() {
+            debug!("No inner arrays found in pB, falling back to single array parsing");
+            vec![parse_array(&s)]
+        } else {
+            inner_arrays
+        }
+    };
+
+    let pA = parse_array(&matches[0]);
+    let pB = parse_pb(&matches[1]);
+    let pC = parse_array(&matches[2]);
+    let pubInputs = parse_array(&matches[3]);
+
+    let result = json!({
+        "pA": pA,
+        "pB": pB,
+        "pC": pC,
+        "pubInputs": pubInputs
+    });
+
+    debug!("Parsed result: {}", serde_json::to_string_pretty(&result).unwrap());
+
+    result
 }

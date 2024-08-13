@@ -34,7 +34,7 @@ pub async fn generate_calldata(
         Ok(res) => {
             let duration = start.elapsed();
             info!("Total time for generate valid calldata: {:?}", duration);
-            HttpResponse::Ok().content_type("text/plain").body(res)
+            HttpResponse::Ok().content_type("application/json").body(res.to_string())
         }
         Err(e) => HttpResponse::InternalServerError().body(format!("Error: {}", e)),
     }

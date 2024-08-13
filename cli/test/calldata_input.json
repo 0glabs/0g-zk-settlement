@@ -2,11 +2,7 @@
     "requests": [
         {
             "nonce": 1,
-            "inputCount": 1,
-            "outputCount": 0,
-            "inputPrice": "10",
-            "outputPrice": "5",
-            "serviceName": "0x1234567890abcdef1234567890abcdef",
+            "fee": "10",
             "userAddress": "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
             "providerAddress": "0x1234567890123456789012345678901234567890"
         }
