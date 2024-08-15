@@ -13,7 +13,7 @@ template NonceCheck(traceLen) {
     component sumFlag = BinSum(1, traceLen-1);
     component LT[traceLen - 1];
     for (i=0; i<traceLen-1; i++) {
-        LT[i] = LessThan(nonceBytesWidth);
+        LT[i] = LessThan(nonceBytesWidth * 8);
         LT[i].in[0] <== nonce[i];
         LT[i].in[1] <== nonce[i+1];
         sumFlag.in[i][0] <== LT[i].out;
