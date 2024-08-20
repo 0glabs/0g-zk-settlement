@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PHASE1=./circuits/pot20_final.ptau
+PHASE1=./circuits/pot19_final.ptau
 BUILD_DIR=./build_eddsa
 CIRCUIT_PATH=./circuits
 CIRCUIT_NAME=settle_eddsa

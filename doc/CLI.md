@@ -21,7 +21,7 @@ python zk_settlement_cli.py <command> [options]
 ## Environment Variables
 
 NODE_PORT: Port for the NodeJS backend (default: 3000)
-RUST_PORT: Port for the Rust backend (default: 8080)
+RUST_PORT: Port for the Rust backend (default: 3001)
 
 ### Commands
 #### Generate Key Pair

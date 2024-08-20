@@ -1,12 +1,15 @@
 use std::path::PathBuf;
 use std::env;
 
+const DEFAULT_PORT: u16 = 3001;
+
 pub fn get_server_addr() -> String {
     let port = env::var("RUST_PROVER_PORT")
-        .unwrap_or_else(|_| "3001".to_string())
-        .parse()
-        .unwrap_or(8080);
-    format!("127.0.0.1:{}", port)
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(DEFAULT_PORT);
+    
+    format!("0.0.0.0:{}", port)
 }
 
 pub fn get_circuit_paths() -> (PathBuf, PathBuf, PathBuf) {

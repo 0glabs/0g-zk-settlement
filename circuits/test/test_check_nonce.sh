@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PHASE1=../pot20_final.ptau
+PHASE1=../pot19_final.ptau
 BUILD_DIR=./build_check_nonce
 CIRCUIT_NAME=test_check_nonce
 

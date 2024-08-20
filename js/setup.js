@@ -2,6 +2,7 @@ const snarkjs = require('snarkjs');
 const fs = require('fs').promises;
 const readline = require('readline');
 const config = require('./config');
+let crypto = require('crypto');
 
 function formatTime(seconds) {
     return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
@@ -35,18 +36,39 @@ async function runTrustedSetup() {
 
         console.log('****CONTRIBUTE TO THE PHASE 2 CEREMONY****');
         await measureTime(async () => {
-            const rl = readline.createInterface({
-                input: process.stdin,
-                output: process.stdout
-            });
-            const userInput = await new Promise(resolve => rl.question("Enter some random text: ", resolve));
-            rl.close();
+            const getRandomInput = () => {
+                // Generate 32 random bytes and convert to hex string
+                return crypto.randomBytes(32).toString('hex');
+            };
+
+            const getUserInputWithTimeout = () => {
+                return new Promise((resolve) => {
+                    const rl = readline.createInterface({
+                        input: process.stdin,
+                        output: process.stdout
+                    });
+
+                    const timeout = setTimeout(() => {
+                        rl.close();
+                        console.log("No input received within 10 seconds. Using system random source.");
+                        resolve(getRandomInput());
+                    }, 10000);
+
+                    rl.question("Enter some random text (or wait 10 seconds for auto-generation): ", (userInput) => {
+                        clearTimeout(timeout);
+                        rl.close();
+                        resolve(userInput);
+                    });
+                });
+            };
+
+            const input = await getUserInputWithTimeout();
 
             await snarkjs.zKey.contribute(
                 `${config.buildDir}/${config.circuitName}_0.zkey`,
                 `${config.buildDir}/${config.circuitName}_1.zkey`,
                 "1st Contributor Name",
-                userInput
+                input
             );
         });
 
