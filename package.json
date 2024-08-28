@@ -4,11 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "prepare_input": "node ./js/helper/main.js",
-    "check_memory": "ts-node ./js/check_memory.ts",
-    "compile": "sh ./js/scripts/compile.sh",
-    "setup": "node --max-old-space-size=8192 ./js/scripts/setup.js",
-    "start": "node ./js/server.js"
+    "prepare_input": "node ./server/helper/main.js",
+    "check_memory": "ts-node ./server/check_memory.ts",
+    "compile": "sh ./server/scripts/compile.sh",
+    "setup": "node --max-old-space-size=8192 ./server/scripts/setup.js",
+    "start": "node ./server/server.js"
   },
   "author": "",
   "license": "ISC",
@@ -21,7 +21,8 @@
     "fs-extra": "^10.0.0",
     "cors": "^2.8.5",
     "circomlibjs": "0.1.7",
-    "@noble/curves": "1.4.2"
+    "@noble/curves": "1.4.2",
+    "ffi-napi": "^4.0.3" 
   },
   "devDependencies": {
     "@types/node": "^16.11.12",

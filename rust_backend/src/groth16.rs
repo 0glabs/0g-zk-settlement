@@ -21,11 +21,15 @@ type Groth16 = ark_groth16::Groth16<ark_bn254::Bn254, ark_groth16::gpu::GpuDomai
 #[cfg(not(feature = "cuda"))]
 type Groth16 = ark_groth16::Groth16<ark_bn254::Bn254>;
 
+#[derive(Debug)]
 pub struct AppState {
-    pub circom: CircomBuilder<Bn254>,
-    pub zkey: ProvingKey<Bn254>,
-    pub pvk: PreparedVerifyingKey<Bn254>,
+    pub circom: Arc<CircomBuilder<Bn254>>,
+    pub zkey: Arc<ProvingKey<Bn254>>,
+    pub pvk: Arc<PreparedVerifyingKey<Bn254>>,
 }
+
+unsafe impl Send for AppState {}
+unsafe impl Sync for AppState {}
 
 pub async fn setup() -> Result<AppState, AppError> {
     let setup_start = Instant::now();
@@ -59,7 +63,11 @@ pub async fn setup() -> Result<AppState, AppError> {
     let total_duration = setup_start.elapsed();
     info!("Setup completed in {:?}", total_duration);
 
-    Ok(AppState { circom, zkey, pvk })
+    Ok(AppState {
+        circom: Arc::new(circom),
+        zkey: Arc::new(zkey),
+        pvk: Arc::new(pvk),
+    })
 }
 
 pub fn generate_valid_proof(

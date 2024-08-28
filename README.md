@@ -31,25 +31,20 @@ yarn compile
 yarn setup
 ```
 
+## Build rust backend
+We also provide a more efficient implementation for costy generating proof and calldata operations using Rust language. 
+### build
+```shell
+cd rust_backend
+cargo build --release
+# A example on Mac OS, the surfix of library on different OS may be different.
+cp target/release/librust_prover.dylib ../build/
+```
+
 ### Start service
 ```shell
 yarn start
 ```
-
-## Rust backend
-We also provide a more efficient implementation for costy generating proof and calldata operations using Rust language. 
-### build
-```shell
-cargo build --release
-```
-### run 
-```shell
-RUST_LOG=info ./target/release/zk-settlement
-```
-
-## Access with CLI
-You can use the zkSettlement prover agent's functionalities by CLI.
-For detailed CLI documentation, please refer to our [CLI Documentation](./doc/CLI.md).
 
 ## Access with CURL
 You can also use the zkSettlement prover agent's functionalities by directly calling the API.

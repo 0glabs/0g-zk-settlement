@@ -1,17 +1,6 @@
 use std::path::PathBuf;
 use std::env;
 
-const DEFAULT_PORT: u16 = 3001;
-
-pub fn get_server_addr() -> String {
-    let port = env::var("RUST_PROVER_PORT")
-        .ok()
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(DEFAULT_PORT);
-    
-    format!("0.0.0.0:{}", port)
-}
-
 pub fn get_circuit_paths() -> (PathBuf, PathBuf, PathBuf) {
     let current_dir = std::env::current_dir().expect("Failed to get current directory");
     let build_dir = env::var("BUILD_DIR").unwrap_or_else(|_| "build".to_string());

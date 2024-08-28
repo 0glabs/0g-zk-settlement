@@ -74,8 +74,6 @@ async function getSolidityCalldata(inputs) {
     try {
         console.log('Generating new proof...');
         const { proof, publicSignals } = await generateProof(inputs);
-        console.log("proof:", proof);
-        console.log("publicSignals:", publicSignals);
         let calldata_str;
         if (proof.protocol === "groth16") {
             calldata_str = await snarkjs.groth16.exportSolidityCallData(proof, publicSignals);
