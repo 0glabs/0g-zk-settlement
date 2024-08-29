@@ -13,15 +13,8 @@ As shown in the figure above, on-chain nodes need to execute all complete state 
 
 For more details on the design and implementation, please see our [Design Documentation](./doc/DESIGN.md).
 
-# Dependence
-### Linux
-node-v20.5.0
-### mac
-node-v20.15.1
-
-Note: The above version is the version that has passed the verification, and is not the only or minimum version.
-# Quick
-## JS backend
+# Quick start
+## Manual
 ### Compile circuit
 ```shell
 yarn compile
@@ -31,9 +24,8 @@ yarn compile
 yarn setup
 ```
 
-## Build rust backend
+### Build rust backend
 We also provide a more efficient implementation for costy generating proof and calldata operations using Rust language. 
-### build
 ```shell
 cd rust_backend
 cargo build --release
@@ -45,9 +37,17 @@ cp target/release/librust_prover.dylib ../build/
 ```shell
 yarn start
 ```
+## Docker
+You can also start service using docker.
+```shell
+# Build image
+docker build --target runner -t zk-settlement-runner . 2>&1 | tee build_log.txt
+# Run
+docker run -d -p 3000:3000 --name prover zk-settlement-runner
+```
 
-## Access with CURL
-You can also use the zkSettlement prover agent's functionalities by directly calling the API.
+## API
+You can use the zkSettlement prover agent's functionalities by directly calling the API.
 For detailed API documentation and usage examples, please refer to our [API Documentation](./doc/API.md).
 
 # Contributing
