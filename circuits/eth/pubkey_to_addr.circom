@@ -1,6 +1,6 @@
 pragma circom 2.0.2;
 
-include "../keccak/keccak_bytes.circom";
+include "../hasher/keccak_bytes.circom";
 
 template PubkeyToAddress() {
     var i;
