@@ -11,11 +11,19 @@ RUN apt-get update && apt-get install -y \
     wget \
     && rm -rf /var/lib/apt/lists/*
 
-# 安装 Miniconda
-RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-aarch64.sh -O miniconda.sh \
-    && chmod +x miniconda.sh \
-    && ./miniconda.sh -b -p /opt/conda \
-    && rm miniconda.sh
+# 安装 Miniconda（根据系统架构选择合适的版本）
+RUN ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then \
+        MINICONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"; \
+    elif [ "$ARCH" = "aarch64" ]; then \
+        MINICONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-aarch64.sh"; \
+    else \
+        echo "Unsupported architecture: $ARCH" && exit 1; \
+    fi && \
+    wget $MINICONDA_URL -O miniconda.sh && \
+    chmod +x miniconda.sh && \
+    ./miniconda.sh -b -p /opt/conda && \
+    rm miniconda.sh
 
 
 # 将 conda 添加到 PATH
