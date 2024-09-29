@@ -75,7 +75,7 @@ app.post('/proof-input', async (req, res) => {
 async function generateProof(inputs, useRust = false) {
     if (useRust) {
         const inputStr = JSON.stringify(inputs);
-        const result = callRustFunction('generate_proof', inputStr);
+        const result = await callRustFunction('generate_proof', inputStr);
         return JSON.parse(result);
     } else {
         // JavaScript implementation
@@ -121,7 +121,7 @@ app.post('/proof-combined', async (req, res) => {
 async function generateCalldata(inputs, useRust = false) {
     if (useRust) {
         const inputStr = JSON.stringify(inputs);
-        const result = callRustFunction('generate_calldata', inputStr);
+        const result = await callRustFunction('generate_calldata', inputStr);
         return JSON.parse(result);
     } else {
         // JavaScript implementation
@@ -213,9 +213,7 @@ function handleError(res, error) {
 async function startServer() {
     try {
         process.env.RUST_LOG = 'info';
-        console.log('Initializing Rust backend...');
-        const initResult = callRustFunction('init');
-        console.log('Rust backend initialization result:', initResult);
+        console.log('Initializing server...');
 
         const port = process.env.JS_PROVER_PORT || 3000;
         const useHttps = process.env.USE_HTTPS === 'true';
