@@ -106,6 +106,55 @@ async function writeJsonToFile(data, filename) {
     return filePath;
 }
 
+function hexToByteArray(hexString) {
+    // Remove the '0x' prefix if it exists
+    if (hexString.startsWith('0x')) {
+        hexString = hexString.slice(2);
+    }
+    // Ensure the hex string has an even length
+    if (hexString.length % 2 !== 0) {
+        throw new Error('Invalid hex string');
+    }
+
+    const byteArray = new Uint8Array(hexString.length / 2);
+    for (let i = 0; i < hexString.length; i += 2) {
+        byteArray[i / 2] = parseInt(hexString.slice(i, 2), 16);
+    }
+    return byteArray;
+}
+
+function combineHexStringsToByteArray(hexString1, hexString2) {
+    // Convert each hex string to a byte array
+    const byteArray1 = hexToByteArray(hexString1);
+    const byteArray2 = hexToByteArray(hexString2);
+
+    // Concatenate the two byte arrays into one 32-byte array
+    const combinedByteArray = new Uint8Array(32);
+    combinedByteArray.set(byteArray1, 0);  // Set first 16 bytes
+    combinedByteArray.set(byteArray2, 16); // Set next 16 bytes
+
+    return combinedByteArray;
+}
+
+function bigIntToLittleEndianHex(bigint) {
+    // Convert BigInt to hex string in big-endian format
+    let hexString = bigint.toString(16);
+
+    // Ensure the hex string has an even length
+    if (hexString.length % 2 !== 0) {
+        hexString = '0' + hexString; // pad with leading 0 if needed
+    }
+
+    // Reverse the byte order (convert to little-endian)
+    let littleEndianHex = '';
+    for (let i = hexString.length; i > 0; i -= 2) {
+        littleEndianHex += hexString.slice(i - 2, i);
+    }
+
+    return littleEndianHex;
+}
+
+
 module.exports = {
     formatBytes,
     parseBytes,
@@ -116,5 +165,7 @@ module.exports = {
     convertToBiguint64,
     formatArray,
     jsonifyData,
-    writeJsonToFile
+    writeJsonToFile,
+    combineHexStringsToByteArray,
+    bigIntToLittleEndianHex
 };
