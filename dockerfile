@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y \
     gnupg2 \
     build-essential \
     wget \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 # 安装 Miniconda（根据系统架构选择合适的版本）
@@ -57,7 +58,11 @@ RUN cargo install --git https://github.com/iden3/circom.git --rev 2eaaa6d --bin 
 
 # 激活 Python 环境，安装 Node.js 依赖并编译
 RUN source activate py38 && \
-    yarn install && 
+    cd circuits && \
+    wget -O pot19_final.ptau https://storage.googleapis.com/zkevm/ptau/powersOfTau28_hez_final_19.ptau && \
+    yarn install && \
+    yarn compile && \
+    yarn setup
 
 RUN python3 --version 
 
@@ -87,7 +92,7 @@ WORKDIR /app
 COPY --from=builder /app/contract /app/contract
 COPY --from=builder /app/build /app/build
 COPY --from=builder /app/0g-zk-settlement-turbo-engine/target/release/lib* /app/build/
-COPY --from=builder /app/server /app/server
+COPY --from=builder /app/src /app/src
 COPY --from=builder /app/node_modules /app/node_modules
 
 # 创建日志目录
