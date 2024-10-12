@@ -1,7 +1,7 @@
 const snarkjs = require('snarkjs');
 const fs = require('fs').promises;
 const readline = require('readline');
-const config = require('./config');
+const config = require('../config');
 let crypto = require('crypto');
 
 function formatTime(seconds) {
