@@ -1,16 +1,7 @@
 const snarkjs = require('snarkjs');
 const fs = require('fs').promises;
 const path = require('path');
-const config = require('./config');
-
-async function fileExists(filePath) {
-    try {
-        await fs.access(filePath, fs.constants.F_OK);
-        return true;
-    } catch {
-        return false;
-    }
-}
+const config = require('../config');
 
 async function getVerificationKey() {
     try {
@@ -24,10 +15,10 @@ async function getVerificationKey() {
 async function getVerifierContract(if_batch = false) {
     try {
         const templates = {
-            groth16: await fs.readFile(path.join(__dirname, '../node_modules/snarkjs/templates/verifier_groth16.sol.ejs'), 'utf8'),
-            plonk: await fs.readFile(path.join(__dirname, '../node_modules/snarkjs/templates/verifier_plonk.sol.ejs'), 'utf8'),
-            fflonk: await fs.readFile(path.join(__dirname, '../node_modules/snarkjs/templates/verifier_fflonk.sol.ejs'), 'utf8'),
-            batchGroth16: await fs.readFile(path.join(__dirname, '../contract/batch_verifier.sol.ejs'), 'utf8')
+            groth16: await fs.readFile(path.join(__dirname, '../../node_modules/snarkjs/templates/verifier_groth16.sol.ejs'), 'utf8'),
+            plonk: await fs.readFile(path.join(__dirname, '../../node_modules/snarkjs/templates/verifier_plonk.sol.ejs'), 'utf8'),
+            fflonk: await fs.readFile(path.join(__dirname, '../../node_modules/snarkjs/templates/verifier_fflonk.sol.ejs'), 'utf8'),
+            batchGroth16: await fs.readFile(path.join(__dirname, '../../contract/batch_verifier.sol.ejs'), 'utf8')
         };
         let verifierCode;
         if (if_batch) {
