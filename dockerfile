@@ -104,5 +104,5 @@ ENV RUST_LOG=info
 RUN echo "Finished runner stage"
 
 # 启动应用程序并重定向日志，同时确保容器持续运行
-CMD nohup node server/server.js > logs/prover.log 2>&1 & \
+CMD nohup node src/server.js > logs/prover.log 2>&1 & \
     tail -f logs/prover.log 
