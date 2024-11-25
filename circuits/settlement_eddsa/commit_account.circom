@@ -6,7 +6,7 @@ template AccountCommit() {
     var i;
     var j;
     var addressBytesWidth = 20; // unit160:[u8;20]
-    var nonceBytesWidth = 4; // unit32:[u8;4]
+    var nonceBytesWidth = 8; // unit32:[u8;8]
     var balanceBytesWidth = 8; // unit128:[u8;16]
     var totalBytesWidth = nonceBytesWidth + balanceBytesWidth + addressBytesWidth*2;
     

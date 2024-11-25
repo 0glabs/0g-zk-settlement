@@ -5,11 +5,12 @@ const http = require('http');
 const https = require('https');
 const fs = require('fs');
 const woker = require('./core/prove_verify');
-const utils = require('zk-settlement-base/src/common/utils');
-const { genKeyPair, signData } = require('zk-settlement-base/src/client');
+const utils = require('zk-settlement-client/src/common/utils');
+const { genKeyPair, signData } = require('zk-settlement-client/src/client');
 const { callRustFunction } = require('./core/rust_engine_wrapper');
-const { verifySig, generateProofInput } = require('zk-settlement-base/src/common/helper')
-const { Request } = require('zk-settlement-base/src/common/request');
+const { verifySig, generateProofInput } = require('zk-settlement-client/src/common/helper')
+const { Request } = require('zk-settlement-client/src/common/request');
+
 
 const app = express();
 

@@ -12,7 +12,7 @@ template SettleTrace(l) {
     var i;
     var j; 
     
-    var nonceBytesWidth = 4; // unit32:[u8;4]
+    var nonceBytesWidth = 8; // unit32:[u8;8]
     var addressBytesWidth = 20; // unit160:[u8; 20]
     var balanceBytesWidth = 8; // unit64:[u8; 8]
     var requestBytesWidth = nonceBytesWidth + balanceBytesWidth + addressBytesWidth * 2;
