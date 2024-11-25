@@ -4,10 +4,12 @@ const cors = require('cors');
 const http = require('http');
 const https = require('https');
 const fs = require('fs');
-const prover = require('./prover');
-const { sign, genProofInput, genKeyPair, verifySig } = require('./signer');
-const utils = require('./helper/utils');
-const { callRustFunction } = require('./wrapper');
+const woker = require('./core/prove_verify');
+const utils = require('zk-settlement-base/src/common/utils');
+const { genKeyPair, signData } = require('zk-settlement-base/src/client');
+const { callRustFunction } = require('./core/rust_engine_wrapper');
+const { verifySig, generateProofInput } = require('zk-settlement-base/src/common/helper')
+const { Request } = require('zk-settlement-base/src/common/request');
 
 const app = express();
 
@@ -32,28 +34,73 @@ app.get('/sign-keypair', async (req, res) => {
 
 app.post('/signature', async (req, res) => {
     try {
-        const signatures = await sign(req.body);
+        const { requests, privkey } = req.body;
+
+        // check required fields 
+        if (!requests || !privkey) {
+            throw new Error('Missing required fields in request body');
+        }
+
+        const requestInstances = requests.map(data => new Request(
+            data.nonce,
+            data.fee,
+            data.userAddress.toString(),
+            data.providerAddress.toString()
+        ));
+        console.log("privkey:", privkey);
+        const privkeyBigInt = [BigInt(privkey[0]), BigInt(privkey[1])];
+        const signatures = await signData(requestInstances, privkeyBigInt);
         const responseBody = {
             signatures: signatures
         };
         res.setHeader('Content-Type', 'application/json');
         res.send(utils.jsonifyData(responseBody));
     } catch (error) {
-        console.error('Error in /sign route:', error);
+        console.error('Get error when sign requests:', error);
         res.status(500).json({ error: error.message });
     }
 });
 
 app.post('/check-sign', async (req, res) => {
     try {
-        const isValid = await verifySig(req.body);
+        const { requests, pubkey, signatures } = req.body;
+
+        // check required fields
+        if (!requests || !pubkey || !signatures) {
+            throw new Error('Missing required fields in request body');
+        }
+
+        const requestInstances = requests.map(req => new Request(
+            req.nonce,
+            req.fee,
+            req.userAddress,
+            req.providerAddress
+        ));
+        const isValid = await verifySig(requestInstances, signatures, pubkey);
         res.setHeader('Content-Type', 'application/json');
         res.send(isValid);
     } catch (error) {
-        console.error('Error in /sign route:', error);
+        console.error('Get error when check signatures:', error);
         res.status(500).json({ error: error.message });
     }
 });
+
+async function genProofInput(requestBody) {
+    // check required fields
+    const { requests, l, pubkey, signatures } = requestBody;
+    if (!requests || !l || !pubkey || !signatures) {
+        throw new Error('Missing required fields in request body');
+    }
+    // to json
+    const requestInstances = requests.map(req => new Request(
+        req.nonce,
+        req.fee,
+        req.userAddress,
+        req.providerAddress
+    ));
+
+    return generateProofInput(requestInstances, l, pubkey, signatures);
+}
 
 app.post('/proof-input', async (req, res) => {
     try {
@@ -67,7 +114,7 @@ app.post('/proof-input', async (req, res) => {
         res.setHeader('Content-Type', 'application/json');
         res.send(utils.jsonifyData(responseBody, true));
     } catch (error) {
-        console.error('Error generating proof input:', error);
+        console.error('Get error when generate proof input:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -75,11 +122,11 @@ app.post('/proof-input', async (req, res) => {
 async function generateProof(inputs, useRust = false) {
     if (useRust) {
         const inputStr = JSON.stringify(inputs);
-        const result = callRustFunction('generate_proof', inputStr);
+        const result = await callRustFunction('generate_proof', inputStr);
         return JSON.parse(result);
     } else {
         // JavaScript implementation
-        return await prover.generateProof(inputs);
+        return await woker.generateProof(inputs);
     }
 }
 
@@ -105,9 +152,10 @@ app.post('/proof-combined', async (req, res) => {
     try {
         // Step 1: Generate proof input
         const proofInput = await genProofInput(req.body);
+
         // Step 2: Generate Solidity calldata
         const useRust = req.query.backend === 'rust'; // Use query parameter to choose backend
-        const { proof, publicSignals } =  await generateProof(JSON.parse(utils.jsonifyData(proofInput, true)), useRust);
+        const { proof, publicSignals } = await generateProof(JSON.parse(utils.jsonifyData(proofInput, true)), useRust);
         console.log('Proof generation completed');
         res.json({
             proof,
@@ -118,14 +166,14 @@ app.post('/proof-combined', async (req, res) => {
     }
 });
 
-async function generateCalldata(inputs, useRust = false) {
+async function getSolidityCalldata(inputs, useRust = false) {
     if (useRust) {
         const inputStr = JSON.stringify(inputs);
-        const result = callRustFunction('generate_calldata', inputStr);
+        const result = await callRustFunction('generate_calldata', inputStr);
         return JSON.parse(result);
     } else {
         // JavaScript implementation
-        return await prover.getSolidityCalldata(inputs);
+        return await woker.getSolidityCalldata(inputs);
     }
 }
 
@@ -134,7 +182,7 @@ app.post('/solidity-calldata', async (req, res) => {
     try {
         const inputs = Object.keys(req.body).length > 0 ? req.body : null;
         const useRust = req.query.backend === 'rust'; // Use query parameter to choose backend
-        const calldata = await generateCalldata(inputs, useRust);
+        const calldata = await getSolidityCalldata(inputs, useRust);
         res.setHeader('Content-Type', 'application/json');
         res.send(calldata);
         console.log(`Solidity calldata is generated using ${useRust ? 'Rust' : 'JavaScript'} backend`);
@@ -148,9 +196,10 @@ app.post('/solidity-calldata-combined', async (req, res) => {
     try {
         // Step 1: Generate proof input
         const proofInput = await genProofInput(req.body);
+
         // Step 2: Generate Solidity calldata
         const useRust = req.query.backend === 'rust'; // Use query parameter to choose backend
-        const calldata = await generateCalldata(JSON.parse(utils.jsonifyData(proofInput, true)), useRust);
+        const calldata = await getSolidityCalldata(JSON.parse(utils.jsonifyData(proofInput, true)), useRust);
         res.setHeader('Content-Type', 'application/json');
         res.send(calldata);
         console.log(`Solidity calldata generated using ${useRust ? 'Rust' : 'JavaScript'} backend`);
@@ -161,7 +210,7 @@ app.post('/solidity-calldata-combined', async (req, res) => {
 
 app.get('/vkey', async (req, res) => {
     try {
-        const vKey = await prover.getVerificationKey();
+        const vKey = await woker.getVerificationKey();
         res.json(vKey);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -171,7 +220,7 @@ app.get('/vkey', async (req, res) => {
 app.get('/verifier-contract', async (req, res) => {
     console.log('Generating verifier contract');
     try {
-        const verifierCode = await prover.getVerifierContract();
+        const verifierCode = await woker.getVerifierContract();
         res.setHeader('Content-Type', 'text/plain');
         res.send(verifierCode);
         console.log('Verifier contract is generated');
@@ -183,7 +232,7 @@ app.get('/verifier-contract', async (req, res) => {
 app.get('/batch-verifier-contract', async (req, res) => {
     console.log('Generating verifier contract');
     try {
-        const verifierCode = await prover.getVerifierContract(true);
+        const verifierCode = await woker.getVerifierContract(true);
         res.setHeader('Content-Type', 'text/plain');
         res.send(verifierCode);
         console.log('Verifier contract is generated');
@@ -213,9 +262,7 @@ function handleError(res, error) {
 async function startServer() {
     try {
         process.env.RUST_LOG = 'info';
-        console.log('Initializing Rust backend...');
-        const initResult = callRustFunction('init');
-        console.log('Rust backend initialization result:', initResult);
+        console.log('Initializing server...');
 
         const port = process.env.JS_PROVER_PORT || 3000;
         const useHttps = process.env.USE_HTTPS === 'true';

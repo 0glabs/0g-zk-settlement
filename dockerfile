@@ -9,13 +9,22 @@ RUN apt-get update && apt-get install -y \
     gnupg2 \
     build-essential \
     wget \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
-# 安装 Miniconda
-RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-aarch64.sh -O miniconda.sh \
-    && chmod +x miniconda.sh \
-    && ./miniconda.sh -b -p /opt/conda \
-    && rm miniconda.sh
+# 安装 Miniconda（根据系统架构选择合适的版本）
+RUN ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then \
+        MINICONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"; \
+    elif [ "$ARCH" = "aarch64" ]; then \
+        MINICONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-aarch64.sh"; \
+    else \
+        echo "Unsupported architecture: $ARCH" && exit 1; \
+    fi && \
+    wget $MINICONDA_URL -O miniconda.sh && \
+    chmod +x miniconda.sh && \
+    ./miniconda.sh -b -p /opt/conda && \
+    rm miniconda.sh
 
 
 # 将 conda 添加到 PATH
@@ -49,6 +58,8 @@ RUN cargo install --git https://github.com/iden3/circom.git --rev 2eaaa6d --bin 
 
 # 激活 Python 环境，安装 Node.js 依赖并编译
 RUN source activate py38 && \
+    cd circuits && \
+    wget -O pot19_final.ptau https://storage.googleapis.com/zkevm/ptau/powersOfTau28_hez_final_19.ptau && \
     yarn install && \
     yarn compile && \
     yarn setup
@@ -56,12 +67,9 @@ RUN source activate py38 && \
 RUN python3 --version 
 
 # 编译 Rust-CPU
-RUN cd rust_backend && \
-    echo "Current directory:" && \
-    pwd && \
-    echo "Directory contents:" && \
-    ls -la && \
-    echo "Building Rust project:" && \
+RUN git clone https://github.com/0glabs/0g-zk-settlement-turbo-engine.git && \
+    echo "Building Rust project..." && \
+    cd 0g-zk-settlement-turbo-engine && \
     cargo build --release
 RUN echo "Finished builder stage"
 
@@ -83,8 +91,8 @@ WORKDIR /app
 # 从构建阶段复制编译好的文件和必要的运行时文件
 COPY --from=builder /app/contract /app/contract
 COPY --from=builder /app/build /app/build
-COPY --from=builder /app/rust_backend/target/release/lib* /app/build/
-COPY --from=builder /app/server /app/server
+COPY --from=builder /app/0g-zk-settlement-turbo-engine/target/release/lib* /app/build/
+COPY --from=builder /app/src /app/src
 COPY --from=builder /app/node_modules /app/node_modules
 
 # 创建日志目录
@@ -96,5 +104,5 @@ ENV RUST_LOG=info
 RUN echo "Finished runner stage"
 
 # 启动应用程序并重定向日志，同时确保容器持续运行
-CMD nohup node server/server.js > logs/prover.log 2>&1 & \
+CMD nohup node src/server.js > logs/prover.log 2>&1 & \
     tail -f logs/prover.log 

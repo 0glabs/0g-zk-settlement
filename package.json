@@ -4,25 +4,20 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "prepare_input": "node ./server/helper/main.js",
-    "check_memory": "ts-node ./server/check_memory.ts",
-    "compile": "sh ./server/scripts/compile.sh",
-    "setup": "node --max-old-space-size=8192 ./server/scripts/setup.js",
-    "start": "node ./server/server.js"
+    "compile": "sh ./scripts/compile.sh",
+    "setup": "node --max-old-space-size=8192 ./scripts/setup.js",
+    "start": "node ./src/server.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@noble/hashes": "^1.1.2",
-    "@noble/secp256k1": "^1.7.1",
     "circomlib": "^2.0.5",
     "snarkjs": "^0.7.0",
     "express": "^4.17.1",
     "fs-extra": "^10.0.0",
     "cors": "^2.8.5",
-    "circomlibjs": "0.1.7",
-    "@noble/curves": "1.4.2",
-    "ffi-napi": "^4.0.3" 
+    "ffi-napi": "^4.0.3",
+    "zk-settlement-base": "https://github.com/0glabs/0g-zk-settlement-client.git"
   },
   "devDependencies": {
     "@types/node": "^16.11.12",
