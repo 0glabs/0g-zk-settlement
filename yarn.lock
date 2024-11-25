@@ -1554,7 +1554,7 @@ yn@3.1.1:
 
 "zk-settlement-client@https://github.com/0glabs/0g-zk-settlement-client.git":
   version "1.0.0"
-  resolved "https://github.com/0glabs/0g-zk-settlement-client.git#bb2abacdaa8d4dbc138a0b7b46f360902ab70350"
+  resolved "https://github.com/0glabs/0g-zk-settlement-client.git#58f051c7b2ad26d219168bb52087e093f0d40035"
 
   dependencies:
     circomlibjs "0.1.7"
