@@ -11,6 +11,7 @@ const { callRustFunction } = require('./core/rust_engine_wrapper');
 const { verifySig, generateProofInput } = require('zk-settlement-client/src/common/helper')
 const { Request } = require('zk-settlement-client/src/common/request');
 
+
 const app = express();
 
 app.use(cors());
