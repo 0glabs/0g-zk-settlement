@@ -6,7 +6,7 @@ include "../utils/bytes_to_num.circom";
 
 template NonceCheck(traceLen) {
     var i;
-    var nonceBytesWidth = 4; // unit32:[u8;4]
+    var nonceBytesWidth = 8; // unit32:[u8;8]
 
     signal input nonce[traceLen]; 
 

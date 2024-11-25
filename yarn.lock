@@ -1552,9 +1552,9 @@ yn@3.1.1:
   resolved "https://registry.npmmirror.com/yn/-/yn-3.1.1.tgz#1e87401a09d767c1d5eab26a6e4c185182d2eb50"
   integrity sha512-Ux4ygGWsu2c7isFWe8Yu1YluJmqVhxqK2cLXNQA5AcC3QfbGNpM7fu0Y8b/z16pXLnFxZYvWhd3fhBY9DLmC6Q==
 
-"zk-settlement-base@https://github.com/0glabs/0g-zk-settlement-base.git":
+"zk-settlement-client@https://github.com/0glabs/0g-zk-settlement-client.git":
   version "1.0.0"
-  resolved "https://github.com/0glabs/0g-zk-settlement-base.git#53b4593636f6294e9cc38e75b1148235c09362ea"
+  resolved "https://github.com/0glabs/0g-zk-settlement-client.git#bb2abacdaa8d4dbc138a0b7b46f360902ab70350"
   dependencies:
     circomlibjs "0.1.7"
     express "^4.17.1"
