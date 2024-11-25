@@ -12,7 +12,7 @@ template SignatureVerify(traceLen) {
     var j;
     var nonceBytesWidth = 8; // unit32:[u8;8]
     var addressBytesWidth = 20; // unit160:[u8; 20]
-    var balanceBytesWidth = 8; // unit64:[u8; 8]
+    var balanceBytesWidth = 16; // unit128:[u8; 16]
     var totalBytesWidth = nonceBytesWidth + balanceBytesWidth + addressBytesWidth * 2;
 
     signal input signer[32];
