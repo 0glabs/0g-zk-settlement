@@ -66,11 +66,17 @@ RUN source activate py38 && \
 
 RUN python3 --version 
 
-# 编译 Rust-CPU
+# 编译 Rust 项目
 RUN git clone https://github.com/0glabs/0g-zk-settlement-turbo-engine.git && \
     echo "Building Rust project..." && \
     cd 0g-zk-settlement-turbo-engine && \
-    cargo build --release
+    if [ "${ENABLE_CUDA:-false}" = "true" ]; then \
+        echo "Building with CUDA support..." && \
+        cargo build --release --features cuda; \
+    else \
+        echo "Building without CUDA support..." && \
+        cargo build --release; \
+    fi
 RUN echo "Finished builder stage"
 
 # Run Stage
